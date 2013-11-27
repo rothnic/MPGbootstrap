@@ -8,22 +8,21 @@ require.config({
         async: "./libs/async",
         gmaps: "./mpg/gmaps",
         mpg: "./mpg/mpg",
+        goog: "./libs/goog",
+        getdata: "./mpg/getdata",
+        propertyParser: "./libs/propertyParser",
         jsonFusionQuery: "./mpg/JSONFusionQuery",
-        google: "./mpg/google",
         promise: "./libs/requirejs-promise"
     }
 });
 
-require([ "jquery", "gmaps" ], function( $, gmaps ) {
+
+
+require([ "jquery", "getdata", "jsonFusionQuery", "gmaps" ], function($, getdata, jsonFusionQuery, gmaps){
+    jsonFusionQuery.getData().done(function(){
+        $.dataTable = jsonFusionQuery.dataTable;
         var mapCanvas = $( "#map_canvas" ).get( 0 );
-        gmaps.createMap(mapCanvas);
-    }
-);
-
-require([ "jquery", "jsonFusionQuery" ], function($, jsonFusionQuery){
-
-    var d = jsonFusionQuery.response;
-
-    var test = "string";
+        var center = new gmaps.maps.LatLng($.dataTable.getValue(500,4), $.dataTable.getValue(500,3));
+        gmaps.createMap(mapCanvas, center);
+    });
 });
-

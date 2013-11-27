@@ -4,16 +4,16 @@ define(["async!https://maps.googleapis.com/maps/api/js?key=AIzaSyDG2IoHqOa36_u6C
     function() {
     var gmaps = google;
 
-        gmaps.createMap = function(mapCanvas){
+        gmaps.createMap = function(mapCanvas, centerPoint){
 				var myOptions = {
-					center: new gmaps.maps.LatLng( -34.397, 150.644 ),
-					zoom: 8,
+					center: centerPoint,
+					zoom: 12,
 					mapTypeId: gmaps.maps.MapTypeId.ROADMAP
 				};
 
-				var map = new gmaps.maps.Map( mapCanvas, myOptions );
+				gmaps.map = new gmaps.maps.Map( mapCanvas, myOptions );
                 var layer = new gmaps.maps.FusionTablesLayer({
-                  map: map,
+                  map: gmaps.map,
                   heatmap: { enabled: false },
                   query: {
                     select: "col6",
