@@ -49,6 +49,8 @@
               <li class="active"><a href="#myprofile" data-toggle="tab">MyProfile</a></li>
               <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
               <li><a href="#historic" data-toggle="tab">Historic</a></li>
+              <li><a href="#presentation" data-toggle="tab">Presentation</a></li>
+              <li><a href="#systemmodel" data-toggle="tab">System Model</a></li>
               <li><a href="#about" data-toggle="tab">About</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -84,7 +86,7 @@
         </div>
 
       </div>
-      <div class="tab-pane fade in active" id="leaderboard">
+      <div class="tab-pane fade" id="leaderboard">
           <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas_leader"></div>
         <div class="row" id="leader_table">
             <div>
@@ -107,7 +109,7 @@
         </div>
 
       </div>
-      <div class="tab-pane fade in active" id="historic">
+      <div class="tab-pane fade" id="historic">
           <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas_historic"></div>
         <div class="row" id="historic_table">
             <div>
@@ -130,28 +132,13 @@
         </div>
 
       </div>
-
-      <div class="tab-pane fade" id="contact">
-        <div class="row" id="contact_comp">
-            <div>
-                <div class="dc-data-count">
-                    <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a
-                        href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
-                </div>
-            </div>
-            <table class="table table-hover dc-data-table">
-                <thead>
-                <tr class="header">
-                    <th>Date</th>
-                    <th>Open</th>
-                    <th>Close</th>
-                    <th>Change</th>
-                    <th>Volume</th>
-                </tr>
-                </thead>
-            </table>
+      <div class="tab-pane fade" id="presentation"></div>
+      <div class="tab-pane fade" id="systemmodel">
+        <div class="jumbotron">
+            <iframe seamless src="../export.html"></iframe>
         </div>
       </div>
+      <div class="tab-pane fade" id="about"></div>
 
         <div class="clearfix"></div>
       </div>

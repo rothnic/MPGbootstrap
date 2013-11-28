@@ -31,7 +31,7 @@ require([ "jquery", "getdata", "jsonFusionQuery", "gmaps" ], function($, getdata
     jsonFusionQuery.getData().done(function(){
         $.dataTable = jsonFusionQuery.dataTable;
         var mapCanvas = $( "#map_canvas" ).get( 0 );
-        var center = new gmaps.maps.LatLng($.dataTable.getValue(500,4), $.dataTable.getValue(500,3));
+        var center = new gmaps.maps.LatLng($.dataTable.getValue(200,4), $.dataTable.getValue(200,3));
         gmaps.createMap(mapCanvas, center);
     });
 });
