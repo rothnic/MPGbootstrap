@@ -16,7 +16,16 @@ require.config({
     }
 });
 
-
+require(["jquery"], function($){
+    $('.nav').bind('change', function (e) {
+        // e.target is the new active tab according to docs
+        // so save the reference in case it's needed later on
+        window.activeTab = e.target;
+        // display the alert
+        alert("hello");
+        // Load data etc
+    });
+});
 
 require([ "jquery", "getdata", "jsonFusionQuery", "gmaps" ], function($, getdata, jsonFusionQuery, gmaps){
     jsonFusionQuery.getData().done(function(){
