@@ -34,3 +34,16 @@ iframe {
     padding-right: 10px;
     padding-left: 10px;
 }
+
+#map_canvas_profile{
+    vertical-align: top;
+    height: 300px;
+    margin-right: 0px;
+}
+
+#user-profile-button{
+    float: right;
+    text-align: center;
+    margin-top: 9px;
+    margin-bottom: 8px;
+}

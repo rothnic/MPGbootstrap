@@ -16,6 +16,7 @@
     <!-- Custom styles for this template -->
     <link href="sticky-footer-navbar.css" rel="stylesheet">
     <link href="../css/mpg.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
 
     <!-- Just for debugging purposes. Don't actually copy this line! -->
     <!--[if lt IE 9]><script src="../../docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
@@ -46,13 +47,18 @@
           </div>
           <div class="collapse navbar-collapse">
             <ul class="nav navbar-nav">
-              <li class="active"><a href="#myprofile" data-toggle="tab">MyProfile</a></li>
-              <li><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
+              <li id="tabs" class="hidden" ><a href="#myprofile" data-toggle="tab">MyProfile</a></li>
+              <li class="active"><a href="#leaderboard" data-toggle="tab">Leaderboard</a></li>
               <li><a href="#historic" data-toggle="tab">Historic</a></li>
               <li><a href="#presentation" data-toggle="tab">Presentation</a></li>
               <li><a href="#systemmodel" data-toggle="tab">System Model</a></li>
               <li><a href="#about" data-toggle="tab">About</a></li>
             </ul>
+            <div class="col-sm-push-4">
+                <button type="button" class="btn btn-default btn-md" role="submit" id="user-profile-button">
+                    <span class="glyphicon glyphicon-user text-center" id="usericon"></span>
+                </button>
+        </div>
           </div><!--/.nav-collapse -->
         </div>
       </div>
@@ -63,9 +69,60 @@
           <h3>MPG Dashboard</h3>
         </div>
     <div class ="tab-content">
-      <div class="tab-pane fade in active" id="myprofile">
-          <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas"></div>
-        <div class="row" id="myprofile_table">
+      <div class="tab-pane fade in hidden" id="myprofile">
+      <div class="row">
+          <div class="col-md-6">
+          <div id="map_canvas_profile"></div>
+          </div>
+          <div class="col-md-6">
+          <div id="stats-chart">
+            <strong>My Stats</strong>
+            <span class="reset" style="display: none;">range: <span class="filter"></span></span>
+            <a class="reset" href="javascript:statsChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+            <div class="clearfix"></div>
+        </div>
+          </div>
+    </div>
+        <div class="row">
+    <div id="yearly-bubble-chart" class="dc-chart">
+        <strong>Yearly Performance</strong> (radius: fluctuation/index ratio, color: gain/loss)
+        <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
+           style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+<div class="row">
+
+    <div id="vehicle-chart">
+        <strong>Vehicles</strong>
+        <a class="reset" href="javascript:vehicleChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
+    </div>
+
+
+</div>
+
+<div class="row">
+    <div id="monthly-move-chart">
+        <strong>Monthly Index Abs Move & Volume/500,000 Chart</strong>
+        <span class="reset" style="display: none;">range: <span class="filter"></span></span>
+        <a class="reset" href="javascript:moveChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
+           style="display: none;">reset</a>
+
+        <div class="clearfix"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div id="monthly-volume-chart">
+    </div>
+    <p class="muted pull-right" style="margin-right: 15px;">select a time range to zoom in</p>
+</div>
+          <div class="row" id="myprofile_table">
             <div>
                 <div class="dc-data-count">
                     <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a
@@ -86,7 +143,7 @@
         </div>
 
       </div>
-      <div class="tab-pane fade" id="leaderboard">
+      <div class="tab-pane fade in active" id="leaderboard">
           <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas_leader"></div>
         <div class="row" id="leader_table">
             <div>
@@ -157,6 +214,6 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
     <script src="../../dist/js/bootstrap.min.js"></script>
-    <script data-main="js/main" src="js/libs/require-jquery.js"></script>
+    <script data-main="js/main" src="../../node_modules/requirejs/require.js"></script>
   </body>
 </html>

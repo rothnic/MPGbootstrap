@@ -2,7 +2,12 @@
 
 module.exports = function(grunt) {
   "use strict";
-
+  var jsFiles = module.exports.jsFiles,
+      output = {
+      js: '<%= pkg.name %>.js',
+      jsmin: '<%= pkg.name %>.min.js',
+      map: '<%= pkg.name %>.min.js.map'
+    };
   RegExp.quote = require('regexp-quote')
   var btoa = require('btoa')
   // Project configuration.
@@ -242,3 +247,37 @@ module.exports = function(grunt) {
     fs.writeFileSync('docs-assets/js/raw-files.js', files)
   });
 };
+
+module.exports.jsFiles = [
+    "src/banner.js",
+    "src/core.js",
+    "src/errors.js",
+    "src/utils.js",
+    "src/events.js",
+    "src/filters.js",
+    "src/base-mixin.js",
+    "src/margin-mixin.js",
+    "src/color-mixin.js",
+    "src/coordinate-grid-mixin.js",
+    "src/stack-mixin.js",
+    "src/cap-mixin.js",
+    "src/bubble-mixin.js",
+    "src/pie-chart.js",
+    "src/bar-chart.js",
+    "src/line-chart.js",
+    "src/data-count.js",
+    "src/data-table.js",
+    "src/bubble-chart.js",
+    "src/composite-chart.js",
+    "src/series-chart.js",
+    "src/geo-choropleth-chart.js",
+    "src/bubble-overlay.js",
+    "src/row-chart.js",
+    "src/legend.js",
+    "src/scatter-plot.js",
+    "src/number-display.js",
+    "src/heatmap.js",
+    "src/d3.box.js",
+    "src/box-plot.js",
+    "src/footer.js"  // NOTE: keep this last
+];

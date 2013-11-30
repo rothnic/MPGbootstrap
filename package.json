@@ -1,10 +1,18 @@
 {
-    "name": "bootstrap"
-  , "description": "Sleek, intuitive, and powerful front-end framework for faster and easier web development."
-  , "version": "3.0.2"
-  , "keywords": ["bootstrap", "css"]
-  , "homepage": "http://getbootstrap.com"
-  , "author": "Twitter, Inc."
+    "name": "MPGbootstrap"
+  , "description": "MPG visualization website using bootstrap, d3, dc"
+  , "version": "1.0.0-dev"
+  , "keywords": ["bootstrap",
+    "visualization",
+    "svg",
+    "animation",
+    "canvas",
+    "chart",
+    "dimensional",
+    "crossfilter",
+    "d3"]
+  , "homepage": "tbd"
+  , "author": "Nick Roth"
   , "scripts": { "test": "grunt test" }
   , "repository": {
       "type": "git"
@@ -18,11 +26,17 @@
         "type": "Apache-2.0"
       , "url": "http://www.apache.org/licenses/LICENSE-2.0"
     }
-  ]
+  ],
+    "dependencies": {
+    "crossfilter": "1.x",
+    "d3": "3.x"
+  }
   , "devDependencies": {
       "browserstack-runner": "~0.0.12"
-    , "btoa": "~1.1.1"
-    , "grunt": "~0.4.1"
+    , "btoa": "~1.1.1",
+    "emu": "~0.0.2"
+    , "grunt": "~0.4.1",
+    "grunt-cli": "~0.1.9"
     , "grunt-contrib-clean": "~0.5.0"
     , "grunt-contrib-concat": "~0.3.0"
     , "grunt-contrib-connect": "~0.5.0"
@@ -35,6 +49,19 @@
     , "grunt-jekyll": "~0.4.0"
     , "grunt-recess": "~0.4.0"
     , "grunt-sed": "~0.1.1"
-    , "regexp-quote": "~0.0.0"
-  }
+    , "regexp-quote": "~0.0.0",
+    "grunt-shell": "~0.5.0",
+    "grunt-vows": "~0.4.0",
+    "jsdom": "0.8.x",
+    "sinon": "1.7.x",
+    "uglify-js": "2.4.x",
+    "vows": "0.7.x",
+    "marked": "~0.2.10",
+    "grunt-contrib-jasmine": "https://github.com/travisjeffery/grunt-contrib-jasmine/tarball/master",
+    "grunt-contrib-watch": "~0.5.3",
+    "grunt-template-jasmine-istanbul": "https://github.com/sclevine/grunt-template-jasmine-istanbul/tarball/master",
+    "grunt-docco2": "~0.1.5",
+    "grunt-gh-pages": "~0.8.0",
+    "grunt-markdown": "https://github.com/willkan/grunt-markdown/tarball/master"
+    }
 }
