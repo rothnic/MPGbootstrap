@@ -19,7 +19,10 @@ require.config({
         mpgcharts: "./mpg/mpgcharts",
         mpgsite: "./mpg/mpgsite",
         tabs: "../../../js/tab",
-        gomaps: "./libs/jquery.gomap-1.3.2.min"
+        gomaps: "./libs/jquery.gomap-1.3.2.min",
+        tooltip: "../../../js/tooltip",
+        changeType: "./libs/jquery.changeElementType",
+        d3Tooltip: "./libs/d3-bootstrap"
     },
     shim:{
 
@@ -39,6 +42,13 @@ require.config({
         gomaps: {
             deps: ['jquery', 'gmaps'],
             exports: '$.goMap'
+        },
+        changeType: {
+          deps: ['jquery'],
+          exports: '$.changeElementType'
+        },
+        d3Tooltip: {
+            deps: ['d3']
         }
 
     }
@@ -51,7 +61,7 @@ require(["jquery","mpgsite"], function($,mpgsite){
 });
 
 // Retrieves data from google and initializes maps
-require([ "jquery", "getdata", "jsonFusionQuery", "gmaps", "mpgcharts", "gomaps"], function($, getdata, jsonFusionQuery, gmaps, mpgcharts){
+require([ "jquery", "getdata", "jsonFusionQuery", "gmaps", "mpgcharts", "gomaps", "changeType", "d3Tooltip"], function($, getdata, jsonFusionQuery, gmaps, mpgcharts){
     //Log in functionality would be added to add this detail
 
     jsonFusionQuery.getData().done(function(data){
@@ -82,7 +92,7 @@ require(["jquery"], function($){
 });
 
 // Bind buttons to javascript
-require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"], function($, mpgsite, gmaps, mpgcharts){
+require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery", "tooltip"], function($, mpgsite, gmaps, mpgcharts){
     $('#user-profile-button').bind('click', function(){
         var user = "Pat";
         mpgsite.login(user);

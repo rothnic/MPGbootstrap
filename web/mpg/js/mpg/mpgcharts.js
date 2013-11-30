@@ -1,7 +1,7 @@
 /**
  * Created by nick on 11/26/13.
  */
-define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
+define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
         var mpgcharts = {};
         //# dc.js Getting Started and How-To Guide
         'use strict';
@@ -254,7 +254,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             var test;
 
             yearlyBubbleChart
-                .width(990) // (optional) define chart width, :default = 200
+                .width(800) // (optional) define chart width, :default = 200
                 .height(250)  // (optional) define chart height, :default = 200
                 .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
                 .margins({top: 10, right: 50, bottom: 50, left: 40})
@@ -275,7 +275,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
                     return d.value.altitude;
                 })
                 .keyAccessor(function (d) {
-                    return shortDate(d.value.dd);
+                    return d.value.dd;
                 })
                 .valueAccessor(function (p) {
                     return p.value.avgMPG;
@@ -321,6 +321,20 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
                 //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies to the axis, not the chart.
                 yearlyBubbleChart.yAxis().tickFormat(function (v) {
                     return v + "%";
+                });
+                yearlyBubbleChart.renderlet(function(yearlyBubbleChart){
+                    // mix of dc API and d3 manipulation
+                    //yearlyBubbleChart.select("g>title").replaceWith(function(){return $("<div />")});
+                    //yearlyBubbleChart.$ = $;
+                    //yearlyBubbleChart.$("g>title").changeElementType("a");
+                    //yearlyBubbleChart.$("g.node>title").replaceWith(function(){return ( '<a class = "tt" title = ' + $(this).firstChild + ' />');});
+                    yearlyBubbleChart.selectAll("g.node").append("a").classed("tt", true).attr();
+                    var selection = yearlyBubbleChart.selectAll("g.node>title");
+                    var selArray = selection[0];
+                    yearlyBubbleChart.selectAll("g.node>a.tt").attr("title", function(d, i){ return "'" + selArray[i].textContent + "'";});
+                    yearlyBubbleChart.selectAll("g.node>title").remove();
+                    yearlyBubbleChart.selectAll("g.node>a.tt").call(bootstrap.tooltip().placement("right"));
+
                 });
             // #### Pie/Donut Chart
             // Create a pie chart and use the given css selector as anchor. You can also specify
@@ -654,6 +668,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
         function deg2rad(deg) {
           return deg * (Math.PI/180)
         }
+
         //#### Version
         //Determine the current version of dc with `dc.version`
         d3.selectAll("#version").text(dc.version);
