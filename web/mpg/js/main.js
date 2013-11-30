@@ -82,10 +82,11 @@ require(["jquery"], function($){
 });
 
 // Bind buttons to javascript
-require(["jquery", "mpgsite", "gmaps", "mpgcharts"], function($, mpgsite, gmaps, mpgcharts){
+require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"], function($, mpgsite, gmaps, mpgcharts){
     $('#user-profile-button').bind('click', function(){
         var user = "Pat";
         mpgsite.login(user);
+        mpgcharts.renderAll();
 
     });
 
@@ -100,6 +101,25 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts"], function($, mpgsite, gmaps,
         //e.relatedTarget // previous tab
     });
 
-    //vehicleChart.filterAll();dc.redrawAll();
+    $("#line-chart-button").bind('click', function(){
+        mpgcharts.moveChart.filterAll();
+        mpgcharts.volumeChart.filterAll();
+        mpgcharts.redrawAll();
+    });
+
+    $("#stats-chart-button").bind('click', function(){
+        mpgcharts.statsChart.filterAll();
+        mpgcharts.redrawAll();
+    });
+
+    $("#drives-chart-button").bind('click', function(){
+        mpgcharts.yearlyBubbleChart.filterAll();
+        mpgcharts.redrawAll();
+    });
+
+    $("#vehicle-chart-button").bind('click', function(){
+        mpgcharts.vehicleChart.filterAll();
+        mpgcharts.redrawAll();
+    });
 });
 

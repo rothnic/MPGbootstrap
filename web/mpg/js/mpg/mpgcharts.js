@@ -15,8 +15,8 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
         var statsChart = dc.barChart("#stats-chart");
         //var quarterChart = dc.pieChart("#quarter-chart");
         var vehicleChart = dc.rowChart("#vehicle-chart");
-        var moveChart = dc.lineChart("#monthly-move-chart");
-        var volumeChart = dc.barChart("#leaderboard");
+        var moveChart = dc.lineChart("#detailed-line-chart");
+        var volumeChart = dc.barChart("#detailed-stats-chart");
         var yearlyBubbleChart = dc.bubbleChart("#yearly-bubble-chart");
 
         // ### Anchor Div for Charts
@@ -52,6 +52,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
         d3.csv("../mpg/IntegratedMPG.csv", function (data) {
             /* since its a csv file we need to format the data a bit */
             var dateFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%LZ");
+            var shortDate = d3.time.format("%Y-%m-%d")
             var numberFormat = d3.format(".2f");
 
 
@@ -60,6 +61,9 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
                 d.month = d3.time.month(d.dd); // pre-calculate month for better performance
                 d.close = +d["Miles Per Gallon(Instant)(mpg)"]; // coerce to number
                 d.open = +d["GPS Speed (Meters/second)"];
+                d.lat = +d[" Latitude"];
+                d.long = +d[" Longitude"];
+                d.driveID = d["DriveID"];
 
             });
 
@@ -70,35 +74,74 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
 
             // dimension by year
             var yearlyDimension = ndx.dimension(function (d) {
-                return d3.time.year(d.dd).getFullYear();
+                //return d3.time.day(d.dd).getDay();
+                return d.driveID;
             });
+
+            var secondDimension = ndx.dimension(function (d){
+               return +d.dd;
+            });
+
             // maintain running tallies by year as filters are applied or removed
+
+            function storeLatLng(alat, along){
+                mpgcharts.lastLat = alat;
+                mpgcharts.lastLong = along;
+            }
+            function getLat(){
+                return mpgcharts.lastLat;
+            }
+            function getLng(){
+                return mpgcharts.lastLong;
+            }
+
             var yearlyPerformanceGroup = yearlyDimension.group().reduce(
                 /* callback for when data is added to the current filter results */
                 function (p, v) {
                     ++p.count;
-                    p.absGain += v.close - v.open;
-                    p.fluctuation += Math.abs(v.close - v.open);
-                    p.sumIndex += (v.open + v.close) / 2;
-                    p.avgIndex = p.sumIndex / p.count;
-                    p.percentageGain = (p.absGain / p.avgIndex) * 100;
-                    p.fluctuationPercentage = (p.fluctuation / p.avgIndex) * 100;
+                    p.driveID = v.driveID;
+                    p.altitude = v[' Altitude'];
+                    p.thisLat = v.lat;
+                    p.thisLong = v.long;
+                    p.dd = v.dd;
+                    if(p.count == 1){
+                        p.lastLat = 0.0;
+                        p.lastLong = 0.0;
+                        p.changeDist = 0.0;
+                    }else{
+                        p.lastLat = getLat();
+                        p.lastLong = getLng();
+                        p.changeDist += (getDistanceFromLatLonInKm(p.lastLat,p.lastLong,p.thisLat,p.thisLong) * 0.62);
+                    }
+                    storeLatLng(p.thisLat, p.thisLong);
+                    p.avgMPG = v['Miles Per Gallon(Instant)(mpg)'] / p.count;
                     return p;
                 },
                 /* callback for when data is removed from the current filter results */
                 function (p, v) {
                     --p.count;
-                    p.absGain -= v.close - v.open;
-                    p.fluctuation -= Math.abs(v.close - v.open);
-                    p.sumIndex -= (v.open + v.close) / 2;
-                    p.avgIndex = p.sumIndex / p.count;
-                    p.percentageGain = (p.absGain / p.avgIndex) * 100;
-                    p.fluctuationPercentage = (p.fluctuation / p.avgIndex) * 100;
+                    p.driveID = v.driveID;
+                    p.dd = v.dd;
+                    p.altitude = v[' Altitude'];
+                    p.thisLat = v.lat;
+                    p.thisLong = v.long;
+                    if(p.count == 1){
+                        p.lastLat = 0.0;
+                        p.lastLong = 0.0;
+                        p.changeDist = 0.0;
+                    }else{
+                        p.lastLat = getLat();
+                        p.lastLong = getLng();
+                        p.changeDist -= (getDistanceFromLatLonInKm(p.lastLat,p.lastLong,p.thisLat,p.thisLong) * 0.62);
+                    }
+                    storeLatLng(p.thisLat, p.thisLong);
+                    p.avgMPG = v['Miles Per Gallon(Instant)(mpg)'] / p.count;
                     return p;
                 },
                 /* initialize p */
                 function () {
-                    return {count: 0, absGain: 0, fluctuation: 0, fluctuationPercentage: 0, sumIndex: 0, avgIndex: 0, percentageGain: 0};
+                    storeLatLng(0.0, 0.0);
+                    return {count: 0, avgMPG: 0, changeDist: 0.0};
                 }
             );
 
@@ -115,6 +158,14 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             var monthlyMoveGroup = moveMonths.group().reduceSum(function (d) {
                 return Math.abs(d.close - d.open);
             });
+
+            var driveIDs = ndx.dimension(function(d){
+                return d.driveID;
+            })
+
+            var driveIDGroup = driveIDs.group().reduceSum(function(d){return d.total;});
+            var topTypes = driveIDGroup.top(5);
+
             // group by total volume within move, and scale down result
             var volumeByMonthGroup = moveMonths.group().reduceSum(function (d) {
                 return d.volume / 500000;
@@ -150,7 +201,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             });
             var fluctuationGroup = fluctuation.group();
 
-            // summerize volume by quarter
+/*            // summerize volume by quarter
             var quarter = ndx.dimension(function (d) {
                 var month = d.dd.getMonth();
                 if (month <= 2)
@@ -164,7 +215,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             });
             var quarterGroup = quarter.group().reduceSum(function (d) {
                 return d.volume;
-            });
+            });*/
 
             // counts per weekday
             var dayOfWeek = ndx.dimension(function (d) {
@@ -199,17 +250,20 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             //to a specific group then any interaction with such chart will only trigger redraw
             //on other charts within the same chart group.
             /* dc.bubbleChart("#yearly-bubble-chart", "chartGroup") */
+            var dateScale = d3.time.scale().domain([d3.min(data, function(d){return new Date(+d.dd);}),  d3.max(data, function(d){return new Date(+d.dd);})]);
+            var test;
+
             yearlyBubbleChart
                 .width(990) // (optional) define chart width, :default = 200
                 .height(250)  // (optional) define chart height, :default = 200
                 .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
-                .margins({top: 10, right: 50, bottom: 30, left: 40})
+                .margins({top: 10, right: 50, bottom: 50, left: 40})
                 .dimension(yearlyDimension)
                 //Bubble chart expect the groups are reduced to multiple values which would then be used
                 //to generate x, y, and radius for each key (bubble) in the group
                 .group(yearlyPerformanceGroup)
                 .colors(colorbrewer.RdYlGn[9]) // (optional) define color function or array for bubbles
-                .colorDomain([-500, 500]) //(optional) define color domain to match your data domain if you want to bind data or color
+                .colorDomain([-200, 200]) //(optional) define color domain to match your data domain if you want to bind data or color
                 //##### Accessors
                 //Accessor functions are applied to each value returned by the grouping
                 //
@@ -218,52 +272,56 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
                 //* `.valueAccessor` Identifies the `Y` value that will be applied agains the `.y()` to identify pixel location
                 //* `.radiusValueAccessor` Identifies the value that will be applied agains the `.r()` determine radius size, by default this maps linearly to [0,100]
                 .colorAccessor(function (d) {
-                    return d.value.absGain;
+                    return d.value.altitude;
                 })
-                .keyAccessor(function (p) {
-                    return p.value.absGain;
+                .keyAccessor(function (d) {
+                    return shortDate(d.value.dd);
                 })
                 .valueAccessor(function (p) {
-                    return p.value.percentageGain;
+                    return p.value.avgMPG;
                 })
                 .radiusValueAccessor(function (p) {
-                    return p.value.fluctuationPercentage;
+                    return p.value.lastLat;
                 })
-                .maxBubbleRelativeSize(0.3)
-                .x(d3.scale.linear().domain([-2500, 2500]))
-                .y(d3.scale.linear().domain([-100, 100]))
-                .r(d3.scale.linear().domain([0, 4000]))
+                .maxBubbleRelativeSize(0.1)
+                .x(dateScale)
                 //##### Elastic Scaling
                 //`.elasticX` and `.elasticX` determine whether the chart should rescale each axis to fit data.
                 //The `.yAxisPadding` and `.xAxisPadding` add padding to data above and below their max values in the same unit domains as the Accessors.
                 .elasticY(true)
                 .elasticX(true)
-                .yAxisPadding(100)
-                .xAxisPadding(500)
+                .yAxisPadding(.1)
+                .xAxisPadding(2)
                 .renderHorizontalGridLines(true) // (optional) render horizontal grid lines, :default=false
                 .renderVerticalGridLines(true) // (optional) render vertical grid lines, :default=false
-                .xAxisLabel('Index Gain') // (optional) render an axis label below the x axis
-                .yAxisLabel('Index Gain %') // (optional) render a vertical axis lable left of the y axis
+                .xAxisLabel('Time') // (optional) render an axis label below the x axis
+                .yAxisLabel('MPG') // (optional) render a vertical axis lable left of the y axis
                 //#### Labels and  Titles
                 //Labels are displaed on the chart for each bubble. Titles displayed on mouseover.
                 .renderLabel(true) // (optional) whether chart should render labels, :default = true
-                .label(function (p) {
-                    return p.key;
+                .label(function (d) {
+                    //console.log(String(shortDate(d.value.dd)))
+                    return String(shortDate(d.value.dd));
                 })
                 .renderTitle(true) // (optional) whether chart should render titles, :default = false
                 .title(function (p) {
                     return [p.key,
-                           "Index Gain: " + numberFormat(p.value.absGain),
-                           "Index Gain in Percentage: " + numberFormat(p.value.percentageGain) + "%",
-                           "Fluctuation / Index Ratio: " + numberFormat(p.value.fluctuationPercentage) + "%"]
+                           "Date: " + shortDate(p.value.dd),
+                           "MPG: " + numberFormat(p.value.avgMPG),
+                           "Distance: " + numberFormat(p.value.changeDist) + "miles"]
                            .join("\n");
-                })
-                //#### Customize Axis
-                //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies to the axis, not the chart.
-                .yAxis().tickFormat(function (v) {
-                    return v + "%";
                 });
 
+                //#### Customize Axis
+                yearlyBubbleChart.xAxis()
+                    .ticks(d3.time.days,1)
+                    .tickFormat(d3.time.format('%a %d'))
+                    .tickSize(1)
+                    .tickPadding(5);
+                //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies to the axis, not the chart.
+                yearlyBubbleChart.yAxis().tickFormat(function (v) {
+                    return v + "%";
+                });
             // #### Pie/Donut Chart
             // Create a pie chart and use the given css selector as anchor. You can also specify
             // an optional chart group for this chart to be scoped within. When a chart belongs
@@ -295,7 +353,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
                 .colorDomain([-1750, 1644])
                 // (optional) define color value accessor
                 .colorAccessor(function(d, i){return d.value;})
-                */;/*
+                ;/*
 
 /*            quarterChart.width(180)
                 .height(180)
@@ -330,6 +388,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             /* dc.barChart("#volume-month-chart") */
             statsChart.width(420)
                 .height(300)
+                .transitionDuration(1500)
                 .margins({top: 10, right: 50, bottom: 30, left: 40})
                 .dimension(fluctuation)
                 .group(fluctuationGroup)
@@ -436,30 +495,29 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             </div>
             */
             dc.dataTable(".dc-data-table")
-                .dimension(dateDimension)
+                .dimension(yearlyPerformanceGroup)
                 // data table does not use crossfilter group but rather a closure
                 // as a grouping function
                 .group(function (d) {
-                    var format = d3.format("02d");
-                    return d.dd.getFullYear() + "/" + format((d.dd.getMonth() + 1));
+                    return d.driveID;
                 })
                 .size(10) // (optional) max number of records to be shown, :default = 25
                 // dynamic columns creation using an array of closures
                 .columns([
                     function (d) {
-                        return d.date;
+                        return d.value.driveID;
                     },
                     function (d) {
-                        return numberFormat(d.open);
+                        return numberFormat(d.value.altitude);
                     },
                     function (d) {
-                        return numberFormat(d.close);
+                        return numberFormat(d.value.count);
                     },
                     function (d) {
-                        return numberFormat(d.close - d.open);
+                        return numberFormat(d.value.avgMPG);
                     },
                     function (d) {
-                        return d.volume;
+                        return numberFormat(d.value.thisLong);
                     }
                 ])
                 // (optional) sort using the given field, :default = function(d){return d;}
@@ -557,9 +615,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
 
             //#### Rendering
             //simply call renderAll() to render all charts on the page
-
             dc.renderAll();
-
             /*
             // or you can render charts belong to a specific chart group
             dc.renderAll("group");
@@ -571,10 +627,48 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3){
             */
         });
 
+        mpgcharts.renderAll = function(){
+            dc.renderAll();
+        }
+
+        mpgcharts.redrawAll = function(){
+            dc.redrawAll();
+        }
+
+        mpgcharts.filterAll = function(){
+            dc.filterAll();
+        }
+
+        function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
+            var R = 6371; // Radius of the earth in km
+            var dLat = deg2rad(lat2-lat1);  // deg2rad below
+            var dLon = deg2rad(lon2-lon1);
+            var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            var d = R * c; // Distance in km
+            return d;
+        }
+
+        function deg2rad(deg) {
+          return deg * (Math.PI/180)
+        }
         //#### Version
         //Determine the current version of dc with `dc.version`
         d3.selectAll("#version").text(dc.version);
-    mpgcharts.loaded = true;
-    return mpgcharts;
-}
+
+        // Add the charts to the mpgcharts namespace
+        mpgcharts.statsChart = statsChart;
+        //var quarterChart = quarterChart
+        mpgcharts.vehicleChart = vehicleChart;
+        mpgcharts.moveChart = moveChart;
+        mpgcharts.volumeChart = volumeChart;
+        mpgcharts.yearlyBubbleChart = yearlyBubbleChart;
+
+        mpgcharts.loaded = true;
+
+        // Return the mpgcharts object, containing the customized dc.js charts
+        return mpgcharts;
+    }
 );

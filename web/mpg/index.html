@@ -16,6 +16,7 @@
     <!-- Custom styles for this template -->
     <link href="sticky-footer-navbar.css" rel="stylesheet">
     <link href="../css/mpg.css" rel="stylesheet">
+      <link rel="stylesheet" type="text/css" href="../../dc.css"/>
     <link rel="stylesheet" type="text/css" href="../css/dc.css"/>
 
     <!-- Just for debugging purposes. Don't actually copy this line! -->
@@ -78,7 +79,7 @@
           <div id="stats-chart">
             <strong>My Stats</strong>
             <span class="reset" style="display: none;">range: <span class="filter"></span></span>
-            <a class="reset" href="javascript:statsChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
+            <button id="stats-chart-button" type="button" class="btn btn-default btn-xs reset" style="display: none;">reset</button>
 
             <div class="clearfix"></div>
         </div>
@@ -86,9 +87,8 @@
     </div>
         <div class="row">
     <div id="yearly-bubble-chart" class="dc-chart">
-        <strong>Yearly Performance</strong> (radius: fluctuation/index ratio, color: gain/loss)
-        <a class="reset" href="javascript:yearlyBubbleChart.filterAll();dc.redrawAll();"
-           style="display: none;">reset</a>
+        <strong>Drives</strong>
+        <button id="drives-chart-button" type="button" class="btn btn-default btn-xs reset" style="display: none;">reset</button>
 
         <div class="clearfix"></div>
     </div>
@@ -98,8 +98,7 @@
 
     <div id="vehicle-chart">
         <strong>Vehicles</strong>
-        <a class="reset" href="javascript:vehicleChart.filterAll();dc.redrawAll();" style="display: none;">reset</a>
-
+        <button id="vehicle-chart-button" type="button" class="btn btn-default btn-xs reset" style="display: none;">reset</button>
         <div class="clearfix"></div>
     </div>
 
@@ -107,19 +106,18 @@
 </div>
 
 <div class="row">
-    <div id="monthly-move-chart">
+    <div id="detailed-line-chart">
         <strong>Monthly Index Abs Move & Volume/500,000 Chart</strong>
         <span class="reset" style="display: none;">range: <span class="filter"></span></span>
-        <a class="reset" href="javascript:moveChart.filterAll();volumeChart.filterAll();dc.redrawAll();"
-           style="display: none;">reset</a>
+        <button id="line-chart-button" type="button" class="btn btn-default btn-xs reset" style="display: none;">reset</button>
 
         <div class="clearfix"></div>
     </div>
 </div>
 
 <div class="row">
-    <div id="monthly-volume-chart">
-    </div>
+    <div id="detailed-stats-chart">
+</div>
     <p class="muted pull-right" style="margin-right: 15px;">select a time range to zoom in</p>
 </div>
           <div class="row" id="myprofile_table">
@@ -132,11 +130,11 @@
             <table class="table table-hover dc-data-table">
                 <thead>
                 <tr class="header">
-                    <th>Date</th>
-                    <th>Open</th>
-                    <th>Close</th>
-                    <th>Change</th>
-                    <th>Volume</th>
+                    <th>Drive ID</th>
+                    <th>Altitude</th>
+                    <th>Data Points</th>
+                    <th>Avg MPG</th>
+                    <th>Longitude</th>
                 </tr>
                 </thead>
             </table>
@@ -145,26 +143,6 @@
       </div>
       <div class="tab-pane fade in active" id="leaderboard">
           <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas_leader"></div>
-        <div class="row" id="leader_table">
-            <div>
-                <div class="dc-data-count">
-                    <span class="filter-count"></span> selected out of <span class="total-count"></span> records | <a
-                        href="javascript:dc.filterAll(); dc.renderAll();">Reset All</a>
-                </div>
-            </div>
-            <table class="table table-hover dc-data-table">
-                <thead>
-                <tr class="header">
-                    <th>Date</th>
-                    <th>Open</th>
-                    <th>Close</th>
-                    <th>Change</th>
-                    <th>Volume</th>
-                </tr>
-                </thead>
-            </table>
-        </div>
-
       </div>
       <div class="tab-pane fade" id="historic">
           <div style="vertical-align: top; margin-left: auto; margin-right: auto; height: 400px; width: 960px;" id="map_canvas_historic"></div>

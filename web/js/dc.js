@@ -3793,7 +3793,7 @@ var chart3 = dc.lineChart(compositeChart);
 **/
 dc.lineChart = function (parent, chartGroup) {
     var DEFAULT_DOT_RADIUS = 5;
-    var TOOLTIP_G_CLASS = "dc-tooltip";
+    var TOOLTIP_G_CLASS = "dc-tooltip tooltip";
     var DOT_CIRCLE_CLASS = "dot";
     var Y_AXIS_REF_LINE_CLASS = "yRef";
     var X_AXIS_REF_LINE_CLASS = "xRef";
