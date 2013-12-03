@@ -96,7 +96,7 @@ div.dc-chart {
 
 .dc-chart path.line {
     fill: none;
-    stroke-width: 1.5px;
+    stroke-width: 1px;
 }
 
 .dc-chart circle.dot {
@@ -142,8 +142,8 @@ div.dc-chart {
 
 .dc-data-count {
     float: right;
-    margin-top: 15px;
-    margin-right: 15px;
+    margin-top: auto;
+    margin-right: auto;
 }
 
 .dc-data-count .filter-count {
@@ -267,12 +267,12 @@ div.dc-chart {
 .dc-chart .box circle {
     fill: #fff;
     stroke: #000;
-    stroke-width: 1.5px;
+    stroke-width: 1px;
 }
 
 .dc-chart .box rect {
     stroke: #000;
-    stroke-width: 1.5px;
+    stroke-width: 1px;
 }
 
 .dc-chart .box .center {

@@ -22,7 +22,11 @@ require.config({
         gomaps: "./libs/jquery.gomap-1.3.2.min",
         tooltip: "../../../js/tooltip",
         changeType: "./libs/jquery.changeElementType",
-        d3Tooltip: "./libs/d3-bootstrap"
+        d3Tooltip: "./libs/tooltip",
+        d3compat: "./libs/d3-compat",
+        d3v2: "./libs/d3.v2.min",
+        stats: "./libs/stats",
+        nv: "./libs/nv.d3"
     },
     shim:{
 
@@ -48,7 +52,15 @@ require.config({
           exports: '$.changeElementType'
         },
         d3Tooltip: {
-            deps: ['d3']
+            deps: ['d3','tooltip', 'd3compat', 'd3v2']
+        },
+        d3compat: {
+            deps: ['d3v2'],
+            exports: 'd3v2'
+        },
+        nv: {
+            deps: ['d3'],
+            exports: 'nv'
         }
 
     }
@@ -73,18 +85,18 @@ require([ "jquery", "getdata", "jsonFusionQuery", "gmaps", "mpgcharts", "gomaps"
     });
 });
 
-require(["d3","dc","jquery","mpgcharts"], function(d3, dc, $, mpgcharts){
+require(["d3","d3v2","dc","jquery","mpgcharts"], function(mpgcharts){
 
         console.log(String(mpgcharts.loaded));
-
     }
 );
 
 require(["jquery"], function($){
-    $('.nav').bind('change', function (e) {
+    $('div.ul.li').bind('change', function (e) {
         // e.target is the new active tab according to docs
         // so save the reference in case it's needed later on
         window.activeTab = e.target;
+        console.log("in nav event");
         // display the alert
         alert("hello");
         // Load data etc
@@ -92,12 +104,20 @@ require(["jquery"], function($){
 });
 
 // Bind buttons to javascript
-require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery", "tooltip"], function($, mpgsite, gmaps, mpgcharts){
+require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery", "tooltip", "tabs", "dc"], function($, mpgsite, gmaps, mpgcharts){
+
+
     $('#user-profile-button').bind('click', function(){
         var user = "Pat";
         mpgsite.login(user);
-        mpgcharts.renderAll();
+        console.log("in user profile event");
 
+    });
+
+    // This event makes the navbar behave like tabs, so a singular page serves all content
+    $('#navbar a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
     });
 
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
@@ -107,29 +127,44 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"
         }
         gmaps.maps.event.trigger(gmaps.map,'resize');
         gmaps.map.fitBounds(bounds);
+        mpgcharts.filterAll("profileGroup");
+        mpgcharts.redrawAll("profileGroup");
+        dc.filterAll();
+        dc.renderAll();
+
+        console.log("in map event");
         //e.target // activated tab
         //e.relatedTarget // previous tab
+    });
+
+    $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
+        //mpgcharts.redrawAll("profileGroup");
+        console.log("in data redraw event");
     });
 
     $("#line-chart-button").bind('click', function(){
         mpgcharts.moveChart.filterAll();
         mpgcharts.volumeChart.filterAll();
-        mpgcharts.redrawAll();
+        mpgcharts.redrawAll("profileGroup");
     });
 
     $("#stats-chart-button").bind('click', function(){
         mpgcharts.statsChart.filterAll();
-        mpgcharts.redrawAll();
+        mpgcharts.redrawAll("profileGroup");
     });
 
     $("#drives-chart-button").bind('click', function(){
         mpgcharts.yearlyBubbleChart.filterAll();
-        mpgcharts.redrawAll();
+        mpgcharts.redrawAll("profileGroup");
     });
 
     $("#vehicle-chart-button").bind('click', function(){
         mpgcharts.vehicleChart.filterAll();
-        mpgcharts.redrawAll();
+        mpgcharts.redrawAll("profileGroup");
+    });
+
+    $("#table-chart-button").bind('click', function(){
+        dc.filterAll();
+        dc.renderAll();
     });
 });
-

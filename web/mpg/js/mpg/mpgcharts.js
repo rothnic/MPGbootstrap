@@ -1,23 +1,25 @@
 /**
  * Created by nick on 11/26/13.
  */
-define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
+define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "jsonFusionQuery", "nv", "mpgsite"], function($, d3v2){
         var mpgcharts = {};
         //# dc.js Getting Started and How-To Guide
         'use strict';
         /* jshint globalstrict: true */
         /* global dc,d3,crossfilter,colorbrewer */
-
+        var profileGroup = "profileGroup";
         // ### Create Chart Objects
         // Create chart objects assocated with the container elements identified by the css selector.
         // Note: It is often a good idea to have these objects accessible at the global scope so that they can be modified or filtered by other page controls.
         //var gainOrLossChart = dc.pieChart("#gain-loss-chart");
-        var statsChart = dc.barChart("#stats-chart");
+        var statsChart = dc.barChart("#stats-chart",profileGroup);
+        var mpgBullet = nv.models.bulletChart();
+        var moneyBullet = nv.models.bulletChart();
         //var quarterChart = dc.pieChart("#quarter-chart");
-        var vehicleChart = dc.rowChart("#vehicle-chart");
-        var moveChart = dc.lineChart("#detailed-line-chart");
-        var volumeChart = dc.barChart("#detailed-stats-chart");
-        var yearlyBubbleChart = dc.bubbleChart("#yearly-bubble-chart");
+        var vehicleChart = dc.rowChart("#vehicle-chart",profileGroup);
+        var moveChart = dc.lineChart("#detailed-line-chart",profileGroup);
+        var volumeChart = dc.barChart("#detailed-stats-chart",profileGroup);
+        var yearlyBubbleChart = dc.bubbleChart("#yearly-bubble-chart",profileGroup);
 
         // ### Anchor Div for Charts
         /*
@@ -82,8 +84,8 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                return +d.dd;
             });
 
-            // maintain running tallies by year as filters are applied or removed
 
+            // Functions to handle cross-array calculations in yearlyPerformanceGroup
             function storeLatLng(alat, along){
                 mpgcharts.lastLat = alat;
                 mpgcharts.lastLong = along;
@@ -95,12 +97,16 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 return mpgcharts.lastLong;
             }
 
+            // p = group.value[currentIndex] where value is an array of value objects containing calculated vales
+            // v = inputdata[currentIndex] where each array index is a "row" in the data
+            // maintain running tallies by year as filters are applied or removed
             var yearlyPerformanceGroup = yearlyDimension.group().reduce(
                 /* callback for when data is added to the current filter results */
                 function (p, v) {
                     ++p.count;
                     p.driveID = v.driveID;
-                    p.altitude = v[' Altitude'];
+                    p.altarray.push(Number(v[' Altitude']));
+                    p.altavg = average(p.altarray);
                     p.thisLat = v.lat;
                     p.thisLong = v.long;
                     p.dd = v.dd;
@@ -121,8 +127,11 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 function (p, v) {
                     --p.count;
                     p.driveID = v.driveID;
+                    p.altitude = Number(v['Altitude']);
+                    var index = p.altarray.indexOf(p.altitude);
+                    p.altarray.splice(index,1);
+                    p.altavg = average(p.altarray);
                     p.dd = v.dd;
-                    p.altitude = v[' Altitude'];
                     p.thisLat = v.lat;
                     p.thisLong = v.long;
                     if(p.count == 1){
@@ -141,7 +150,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 /* initialize p */
                 function () {
                     storeLatLng(0.0, 0.0);
-                    return {count: 0, avgMPG: 0, changeDist: 0.0};
+                    return {count: 0, avgMPG: 0, changeDist: 0.0, altarray:[]};
                 }
             );
 
@@ -188,12 +197,12 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 }
             );
 
-            // create categorical dimension
+/*            // create categorical dimension
             var gainOrLoss = ndx.dimension(function (d) {
                 return d.open > d.close ? "Loss" : "Gain";
             });
             // produce counts records in the dimension
-            var gainOrLossGroup = gainOrLoss.group();
+            var gainOrLossGroup = gainOrLoss.group();*/
 
             // determine a histogram of percent changes
             var fluctuation = ndx.dimension(function (d) {
@@ -230,7 +239,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                var vehicle = d.Vehicle;
                return vehicle + "." + String(d.Vehicle);
             });
-            var vehicleGroup = vehicles.group();
+            var vehicleGroup = vehicles.group().reduceCount();
 
             // Group by driver
             var drivers = ndx.dimension(function(d){
@@ -254,16 +263,16 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
             var test;
 
             yearlyBubbleChart
-                .width(800) // (optional) define chart width, :default = 200
-                .height(250)  // (optional) define chart height, :default = 200
+                .width(450) // (optional) define chart width, :default = 200
+                .height(310)  // (optional) define chart height, :default = 200
                 .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
-                .margins({top: 10, right: 50, bottom: 50, left: 40})
+                .margins({top: 10, right: 80, bottom: 50, left: 40})
                 .dimension(yearlyDimension)
                 //Bubble chart expect the groups are reduced to multiple values which would then be used
                 //to generate x, y, and radius for each key (bubble) in the group
                 .group(yearlyPerformanceGroup)
                 .colors(colorbrewer.RdYlGn[9]) // (optional) define color function or array for bubbles
-                .colorDomain([-200, 200]) //(optional) define color domain to match your data domain if you want to bind data or color
+                .colorDomain([50, 0]) //(optional) define color domain to match your data domain if you want to bind data or color
                 //##### Accessors
                 //Accessor functions are applied to each value returned by the grouping
                 //
@@ -272,7 +281,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 //* `.valueAccessor` Identifies the `Y` value that will be applied agains the `.y()` to identify pixel location
                 //* `.radiusValueAccessor` Identifies the value that will be applied agains the `.r()` determine radius size, by default this maps linearly to [0,100]
                 .colorAccessor(function (d) {
-                    return d.value.altitude;
+                    return d.value.altavg.deviation;
                 })
                 .keyAccessor(function (d) {
                     return d.value.dd;
@@ -283,7 +292,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 .radiusValueAccessor(function (p) {
                     return p.value.lastLat;
                 })
-                .maxBubbleRelativeSize(0.1)
+                .maxBubbleRelativeSize(0.02)
                 .x(dateScale)
                 //##### Elastic Scaling
                 //`.elasticX` and `.elasticX` determine whether the chart should rescale each axis to fit data.
@@ -298,44 +307,58 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 .yAxisLabel('MPG') // (optional) render a vertical axis lable left of the y axis
                 //#### Labels and  Titles
                 //Labels are displaed on the chart for each bubble. Titles displayed on mouseover.
-                .renderLabel(true) // (optional) whether chart should render labels, :default = true
-                .label(function (d) {
-                    //console.log(String(shortDate(d.value.dd)))
-                    return String(shortDate(d.value.dd));
-                })
-                .renderTitle(true) // (optional) whether chart should render titles, :default = false
-                .title(function (p) {
+                .renderLabel(false); // (optional) whether chart should render labels, :default = true
+                //.label(function (d) {
+                //    return String(shortDate(d.value.dd));
+                //});
+                //.renderTitle(true); // (optional) whether chart should render titles, :default = false
+/*                .title(function (p) {
                     return [p.key,
                            "Date: " + shortDate(p.value.dd),
                            "MPG: " + numberFormat(p.value.avgMPG),
                            "Distance: " + numberFormat(p.value.changeDist) + "miles"]
                            .join("\n");
-                });
+                });*/
 
                 //#### Customize Axis
                 yearlyBubbleChart.xAxis()
                     .ticks(d3.time.days,1)
                     .tickFormat(d3.time.format('%a %d'))
-                    .tickSize(1)
-                    .tickPadding(5);
+                    .tickSize(.5)
+                    .tickPadding(1);
+
                 //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies to the axis, not the chart.
                 yearlyBubbleChart.yAxis().tickFormat(function (v) {
                     return v + "%";
                 });
                 yearlyBubbleChart.renderlet(function(yearlyBubbleChart){
                     // mix of dc API and d3 manipulation
-                    //yearlyBubbleChart.select("g>title").replaceWith(function(){return $("<div />")});
-                    //yearlyBubbleChart.$ = $;
-                    //yearlyBubbleChart.$("g>title").changeElementType("a");
-                    //yearlyBubbleChart.$("g.node>title").replaceWith(function(){return ( '<a class = "tt" title = ' + $(this).firstChild + ' />');});
-                    yearlyBubbleChart.selectAll("g.node").append("a").classed("tt", true).attr();
-                    var selection = yearlyBubbleChart.selectAll("g.node>title");
-                    var selArray = selection[0];
-                    yearlyBubbleChart.selectAll("g.node>a.tt").attr("title", function(d, i){ return "'" + selArray[i].textContent + "'";});
-                    yearlyBubbleChart.selectAll("g.node>title").remove();
-                    yearlyBubbleChart.selectAll("g.node>a.tt").call(bootstrap.tooltip().placement("right"));
-
+                    // Selects each bubble and adds a bootstrap popover with the data associated with it
+                    yearlyBubbleChart.selectAll("circle").tooltip(function(d, i){
+                        var titleString =  [d.key, "Date: " + String(d.value.dd), "MPG: " + String(d.value.avgMPG), "Distance: " + String(d.value.changeDist) + "miles"].join("\n");
+                        var r, svg, g;
+                        svg = d3.select(document.createElement("svg")).attr("height", 40).attr("width", 75);
+                        g = svg.append("g");
+                        g.append("rect").attr("width", d.value.changeDist * 5).attr("height", 10);
+                        g.append("text").text("Drive Distance: " + String(d.value.changeDist)).attr("dy", "25");
+                        g.append("text").text("Alt. Deviation :" + String(d.value.altavg.deviation)).attr("dy","50");
+                        return {
+                            type: "popover",
+                            title: "Summary",
+                            detection: "shape",
+                            content: svg,
+                            gravity: "right",
+                            placement: "mouse",
+                            // Base positioning. Not used when placement is "mouse"
+                            position: [d.x,d.y],
+                            //How far the tooltip is shifted from the base
+                            displacement: [10,-97], //Shifting parts of the graph over.
+                            //If "mouse"" is the base poistion, then mousemove true allows
+                            //the tooltip to move with the mouse
+                            mousemove: false
+                        };
                 });
+            });
             // #### Pie/Donut Chart
             // Create a pie chart and use the given css selector as anchor. You can also specify
             // an optional chart group for this chart to be scoped within. When a chart belongs
@@ -378,8 +401,8 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
 
             //#### Row Chart
             vehicleChart.width(180)
-                .height(180)
-                .margins({top: 20, left: 10, right: 10, bottom: 20})
+                .height(200)
+                .margins({top: 0, left: 10, right: 40, bottom: 80})
                 .group(vehicleGroup)
                 .dimension(vehicles)
                 // assign colors to each value in the x scale domain
@@ -389,7 +412,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 })
                 // title sets the row text
                 .title(function (d) {
-                    return d.value;
+                    return d.count;
                 })
                 .elasticX(true)
                 .xAxis().ticks(4);
@@ -430,50 +453,73 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
             //#### Stacked Area Chart
             //Specify an area chart, by using a line chart with `.renderArea(true)`
             moveChart
-                .renderArea(true)
-                .width(990)
-                .height(200)
+                .renderArea(false)
+                .width(900)
+                .height(225)
                 .transitionDuration(1000)
-                .margins({top: 30, right: 50, bottom: 25, left: 40})
-                .dimension(moveMonths)
+                .margins({top: 0, right: 50, bottom: 40, left: 40})
+                .dimension(yearlyDimension)
                 .mouseZoomable(true)
                 // Specify a range chart to link the brush extent of the range with the zoom focue of the current chart.
                 .rangeChart(volumeChart)
                 .x(d3.time.scale().domain([d3.min(data, function(d){return d.dd;}), d3.max(data, function(d){return d.dd;})]))
-                .round(d3.time.month.round)
-                .xUnits(d3.time.months)
                 .elasticY(true)
                 .renderHorizontalGridLines(true)
-                .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+                .legend(dc.legend().x(550).y(20).itemHeight(13).gap(5))
                 .brushOn(false)
                 // Add the base layer of the stack with group. The second parameter specifies a series name for use in the legend
                 // The `.valueAccessor` will be used for the base layer
-                .group(indexAvgByMonthGroup, "Monthly Index Average")
+                .group(yearlyPerformanceGroup, "Monthly Index Average")
                 .valueAccessor(function (d) {
-                    return d.value.avg;
+                    return d.value.altavg.mean;
                 })
                 // stack additional layers with `.stack`. The first paramenter is a new group.
                 // The second parameter is the series name. The third is a value accessor.
-                .stack(monthlyMoveGroup, "Monthly Index Move", function (d) {
-                    return d.value;
+                .stack(yearlyPerformanceGroup, "Monthly Index Move", function (d) {
+                    return d.value.changeDist;
                 })
                 // title can be called by any stack layer.
                 .title(function (d) {
-                    var value = d.value.avg ? d.value.avg : d.value;
+                    var value = d.value.altavg.mean ? d.value.altavg.deviation : d.value.altavg.variance;
                     if (isNaN(value)) value = 0;
-                    return dateFormat(d.key) + "\n" + numberFormat(value);
+                    return dateFormat(d.value.dd) + "\n" + numberFormat(value);
                 });
 
-            volumeChart.width(990)
-                .height(40)
-                .margins({top: 0, right: 50, bottom: 20, left: 40})
-                .dimension(moveMonths)
-                .group(volumeByMonthGroup)
+            volumeChart.width(900)
+                .height(110)
+                .margins({top: 20, right: 50, bottom: 80, left: 40})
+                .dimension(yearlyDimension)
+                .group(yearlyPerformanceGroup)
                 .centerBar(true)
                 .gap(1)
-                .x(d3.time.scale().domain([d3.min(data, function(d){return d.dd;}), d3.max(data, function(d){return d.dd;})] ))
-                .round(d3.time.month.round)
-                .xUnits(d3.time.months);
+                .x(d3.time.scale().domain([d3.min(data, function(d){return d.dd;}), d3.max(data, function(d){return d.dd;})] ));
+                //.round(d3.time.month.round)
+                //.xUnits(d3.time.months);
+/*                volumeChart.renderlet(function(volumeChart){
+                    // mix of dc API and d3 manipulation
+                    // Selects each bubble and adds a bootstrap popover with the data associated with it
+                    volumeChart.selectAll("#detailed-stats-chart.svg.g.g.axis.x.path").tooltip(function(d, i){
+                        var r, svg, g;
+                        svg = d3.select(document.createElement("svg")).attr("height", 40).attr("width", 75);
+                        g = svg.append("g");
+                        g.append("text").text("select a time range to zoom in");
+                        return {
+                            type: "tooltip",
+                            //title: "Summary",
+                            detection: "shape",
+                            content: svg,
+                            gravity: "right",
+                            placement: "mouse",
+                            // Base positioning. Not used when placement is "mouse"
+                            //position: [d.x,d.y],
+                            //How far the tooltip is shifted from the base
+                            displacement: [10,-50], //Shifting parts of the graph over.
+                            //If "mouse"" is the base poistion, then mousemove true allows
+                            //the tooltip to move with the mouse
+                            mousemove: false
+                        };
+                    });
+                });*/
 
             /*
             //#### Data Count
@@ -488,6 +534,50 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
             dc.dataCount(".dc-data-count")
                 .dimension(ndx)
                 .group(all);
+
+            var width = 400,
+                height = 70,
+                margin = {top: 5, right: 10, bottom: 12, left: 50},
+                margin2 = {top: 5, right: 10, bottom: 12, left: 100};
+
+
+            mpgBullet.width(width - margin.right - margin.left)
+                .height(height - margin.top - margin.bottom)
+                .margin(margin);
+
+            moneyBullet.width(width - margin.right - margin.left)
+                .height(height - margin.top - margin.bottom)
+                .margin(margin2);
+            moneyBullet.reverse = true;
+
+            //minMPG, meanMPG, maxMPG, avgMPG/person, EPA/car, maxMPG/person
+            var mpgdata = [{"title":"MPG","subtitle":"Rank: 4","ranges":[30,40,100],"measures":[47],"markers":[45],
+                "rangeLabels":['Min MPG','Avg MPG','Max MPG'], "measureLabels":['Your MPG'], "markerLabels":['EPA'] }];
+            //0=avgEPA, saved at 10% above avgEPA, saved at 20% above avgEPA, saved/person, saved by your car at its EPA, saved by highest EPA car
+            var moneydata = [{"title":"Savings vs EPA","subtitle":"Rank: 22","ranges":[256,2345,5473],"measures":[900],"markers":[3087],
+                "rangeLabels":['No Savings(EPA)','Savings at 10% Above','Savings at 20% Above'], "measureLabels":['Your Savings'], "markerLabels":['Your Car EPA', 'Highest EPA'] }];
+
+            var vis = d3.select("#my-mpg-bullet").selectAll("svg")
+                .data(mpgdata)
+                .enter().append("svg")
+                .attr("class", "bullet nvd3")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("preserveAspectRatio","xMinYMin");
+            vis.transition()
+                .duration(1000)
+                .call(mpgBullet);
+
+            var vis2 = d3.select("#my-money-bullet").selectAll("svg")
+                .data(moneydata)
+                .enter().append('svg')
+                .attr('class',"bullet nvd3")
+                .attr("width",width)
+                .attr("height",height)
+                .attr("preserveAspectRatio","xMinYMin");
+            vis2.transition()
+                .duration(1000)
+                .call(moneyBullet);
 
             /*
             //#### Data Table
@@ -522,7 +612,7 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                         return d.value.driveID;
                     },
                     function (d) {
-                        return numberFormat(d.value.altitude);
+                        return numberFormat(d.value.altavg.deviation);
                     },
                     function (d) {
                         return numberFormat(d.value.count);
@@ -545,91 +635,9 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
                 //    table.selectAll(".dc-table-group").classed("info", true);
                 //});
 
-            /*
-            //#### Geo Choropleth Chart
-            //Create a choropleth chart and use the given css selector as anchor. You can also specify
-            //an optional chart group for this chart to be scoped within. When a chart belongs
-            //to a specific group then any interaction with such chart will only trigger redraw
-            //on other charts within the same chart group.
-            dc.geoChoroplethChart("#us-chart")
-                .width(990) // (optional) define chart width, :default = 200
-                .height(500) // (optional) define chart height, :default = 200
-                .transitionDuration(1000) // (optional) define chart transition duration, :default = 1000
-                .dimension(states) // set crossfilter dimension, dimension key should match the name retrieved in geo json layer
-                .group(stateRaisedSum) // set crossfilter group
-                // (optional) define color function or array for bubbles
-                .colors(["#ccc", "#E2F2FF","#C4E4FF","#9ED2FF","#81C5FF","#6BBAFF","#51AEFF","#36A2FF","#1E96FF","#0089FF","#0061B5"])
-                // (optional) define color domain to match your data domain if you want to bind data or color
-                .colorDomain([-5, 200])
-                // (optional) define color value accessor
-                .colorAccessor(function(d, i){return d.value;})
-                // Project the given geojson. You can call this function mutliple times with different geojson feed to generate
-                // multiple layers of geo paths.
-                //
-                // * 1st param - geo json data
-                // * 2nd param - name of the layer which will be used to generate css class
-                // * 3rd param - (optional) a function used to generate key for geo path, it should match the dimension key
-                // in order for the coloring to work properly
-                .overlayGeoJson(statesJson.features, "state", function(d) {
-                    return d.properties.name;
-                })
-                // (optional) closure to generate title for path, :default = d.key + ": " + d.value
-                .title(function(d) {
-                    return "State: " + d.key + "\nTotal Amount Raised: " + numberFormat(d.value ? d.value : 0) + "M";
-                });
-
-                //#### Bubble Overlay Chart
-                // Create a overlay bubble chart and use the given css selector as anchor. You can also specify
-                // an optional chart group for this chart to be scoped within. When a chart belongs
-                // to a specific group then any interaction with such chart will only trigger redraw
-                // on other charts within the same chart group.
-                dc.bubbleOverlay("#bubble-overlay")
-                    // bubble overlay chart does not generate it's own svg element but rather resue an existing
-                    // svg to generate it's overlay layer
-                    .svg(d3.select("#bubble-overlay svg"))
-                    .width(990) // (optional) define chart width, :default = 200
-                    .height(500) // (optional) define chart height, :default = 200
-                    .transitionDuration(1000) // (optional) define chart transition duration, :default = 1000
-                    .dimension(states) // set crossfilter dimension, dimension key should match the name retrieved in geo json layer
-                    .group(stateRaisedSum) // set crossfilter group
-                    // closure used to retrieve x value from multi-value group
-                    .keyAccessor(function(p) {return p.value.absGain;})
-                    // closure used to retrieve y value from multi-value group
-                    .valueAccessor(function(p) {return p.value.percentageGain;})
-                    // (optional) define color function or array for bubbles
-                    .colors(["#ccc", "#E2F2FF","#C4E4FF","#9ED2FF","#81C5FF","#6BBAFF","#51AEFF","#36A2FF","#1E96FF","#0089FF","#0061B5"])
-                    // (optional) define color domain to match your data domain if you want to bind data or color
-                    .colorDomain([-5, 200])
-                    // (optional) define color value accessor
-                    .colorAccessor(function(d, i){return d.value;})
-                    // closure used to retrieve radius value from multi-value group
-                    .radiusValueAccessor(function(p) {return p.value.fluctuationPercentage;})
-                    // set radius scale
-                    .r(d3.scale.linear().domain([0, 3]))
-                    // (optional) whether chart should render labels, :default = true
-                    .renderLabel(true)
-                    // (optional) closure to generate label per bubble, :default = group.key
-                    .label(function(p) {return p.key.getFullYear();})
-                    // (optional) whether chart should render titles, :default = false
-                    .renderTitle(true)
-                    // (optional) closure to generate title per bubble, :default = d.key + ": " + d.value
-                    .title(function(d) {
-                        return "Title: " + d.key;
-                    })
-                    // add data point to it's layer dimension key that matches point name will be used to
-                    // generate bubble. multiple data points can be added to bubble overlay to generate
-                    // multiple bubbles
-                    .point("California", 100, 120)
-                    .point("Colorado", 300, 120)
-                    // (optional) setting debug flag to true will generate a transparent layer on top of
-                    // bubble overlay which can be used to obtain relative x,y coordinate for specific
-                    // data point, :default = false
-                    .debug(true);
-            */
-
             //#### Rendering
             //simply call renderAll() to render all charts on the page
-            dc.renderAll();
+            dc.renderAll(profileGroup);
             /*
             // or you can render charts belong to a specific chart group
             dc.renderAll("group");
@@ -641,17 +649,23 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
             */
         });
 
-        mpgcharts.renderAll = function(){
-            dc.renderAll();
+        mpgcharts.renderAll = function(a){
+            dc.renderAll(a);
         }
 
-        mpgcharts.redrawAll = function(){
-            dc.redrawAll();
+        mpgcharts.redrawAll = function(a){
+            dc.redrawAll(a);
         }
 
-        mpgcharts.filterAll = function(){
-            dc.filterAll();
+        mpgcharts.filterAll = function(a){
+            dc.filterAll(a);
         }
+
+        mpgcharts.refocusAll = function(a){
+            dc.refocusAll(a);
+        }
+
+
 
         function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
             var R = 6371; // Radius of the earth in km
@@ -669,12 +683,21 @@ define(["dc","d3","jquery","crossfilter","colorbrewer"], function(dc,d3,$){
           return deg * (Math.PI/180)
         }
 
+        function average(a) {
+          var r = {mean: 0, variance: 0, deviation: 0}, t = a.length;
+          for(var m, s = 0, l = t; l--; s += a[l]);
+          for(m = r.mean = s / t, l = t, s = 0; l--; s += Math.pow(a[l] - m, 2));
+          return r.deviation = Math.sqrt(r.variance = s / t), r;
+        }
+
         //#### Version
         //Determine the current version of dc with `dc.version`
         d3.selectAll("#version").text(dc.version);
 
         // Add the charts to the mpgcharts namespace
         mpgcharts.statsChart = statsChart;
+        mpgcharts.mpgBullet = mpgBullet;
+        mpgcharts.moneyBullet = moneyBullet;
         //var quarterChart = quarterChart
         mpgcharts.vehicleChart = vehicleChart;
         mpgcharts.moveChart = moveChart;

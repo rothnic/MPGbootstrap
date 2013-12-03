@@ -3,6 +3,7 @@ define(["async!https://maps.googleapis.com/maps/api/js?key=AIzaSyDG2IoHqOa36_u6C
 
     function() {
     var gmaps = google;
+        gmaps.loaded = false;
 
         gmaps.createMap = function(mapCanvas, centerPoint){
 				var myOptions = {
@@ -25,6 +26,7 @@ define(["async!https://maps.googleapis.com/maps/api/js?key=AIzaSyDG2IoHqOa36_u6C
                     templateId: 2
                   }
                 });
+            gmaps.loaded = true;
 			}
     return gmaps;
     }

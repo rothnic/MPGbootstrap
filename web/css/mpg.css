@@ -37,7 +37,7 @@ iframe {
 
 #map_canvas_profile{
     vertical-align: top;
-    height: 300px;
+    height: 325px;
     margin-right: 0px;
 }
 
@@ -46,4 +46,38 @@ iframe {
     text-align: center;
     margin-top: 9px;
     margin-bottom: 8px;
+}
+
+#my-stats-chart svg {
+  height: 80px;
+}
+
+.col-sm-4 .panel {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+div.panel .panel-body {
+    padding: 5px 5px 15px;
+    height: auto;
+}
+
+.col-sm-4 .panel {
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+div.panel.panel-default{
+    margin-bottom: 5px;
+    height: auto;
+}
+
+#map-well {
+    height: auto;
+    margin-bottom: 5px;
+    padding: 8px;
+}
+
+#mapcol {
+    padding-right: 1px;
 }
