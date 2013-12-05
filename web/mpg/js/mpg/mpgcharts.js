@@ -3,6 +3,7 @@
  */
 define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "jsonFusionQuery", "nv", "mpgsite"], function($, d3v2){
         var mpgcharts = {};
+        mpgcharts.formattedData = {};
         //# dc.js Getting Started and How-To Guide
         'use strict';
         /* jshint globalstrict: true */
@@ -20,7 +21,8 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
         var moveChart = dc.lineChart("#detailed-line-chart",profileGroup);
         var volumeChart = dc.barChart("#detailed-stats-chart",profileGroup);
         var yearlyBubbleChart = dc.bubbleChart("#yearly-bubble-chart",profileGroup);
-
+        var seriesChart = nv.models.lineWithFocusChart().useInteractiveGuideline(true);
+        mpgcharts.seriesDatum = [];
         // ### Anchor Div for Charts
         /*
         // A div anchor that can be identified by id
@@ -61,11 +63,13 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             data.forEach(function (d) {
                 d.dd = dateFormat.parse(new Date(Date.parse(d["GPS Time"])).toISOString()); //dateFormat.parse(d["GPS Time"]);
                 d.month = d3.time.month(d.dd); // pre-calculate month for better performance
-                d.close = +d["Miles Per Gallon(Instant)(mpg)"]; // coerce to number
+                d.instantMPG = +d["Miles Per Gallon(Instant)(mpg)"]; // coerce to number
                 d.open = +d["GPS Speed (Meters/second)"];
                 d.lat = +d[" Latitude"];
                 d.long = +d[" Longitude"];
-                d.driveID = d["DriveID"];
+                d.driveID = String(d["DriveID"]);
+                d.driver = d["Driver"]
+                d.altitude = +d[" Altitude"];
 
             });
 
@@ -104,7 +108,9 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 /* callback for when data is added to the current filter results */
                 function (p, v) {
                     ++p.count;
-                    p.driveID = v.driveID;
+                    p.altitude = Number(v[' Altitude']);
+                    p.driveID = String(v.driveID);
+                    p.driver = v.driver;
                     p.altarray.push(Number(v[' Altitude']));
                     p.altavg = average(p.altarray);
                     p.thisLat = v.lat;
@@ -126,12 +132,13 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 /* callback for when data is removed from the current filter results */
                 function (p, v) {
                     --p.count;
-                    p.driveID = v.driveID;
-                    p.altitude = Number(v['Altitude']);
+                    p.driveID = String(v.driveID);
+                    p.altitude = Number(v[' Altitude']);
                     var index = p.altarray.indexOf(p.altitude);
                     p.altarray.splice(index,1);
                     p.altavg = average(p.altarray);
                     p.dd = v.dd;
+                    p.driver = v.driver;
                     p.thisLat = v.lat;
                     p.thisLong = v.long;
                     if(p.count == 1){
@@ -150,7 +157,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 /* initialize p */
                 function () {
                     storeLatLng(0.0, 0.0);
-                    return {count: 0, avgMPG: 0, changeDist: 0.0, altarray:[]};
+                    return {count: 0, avgMPG: 0, changeDist: 0.0, altarray:[], altitude:0.0};
                 }
             );
 
@@ -165,7 +172,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             });
             // group by total movement within month
             var monthlyMoveGroup = moveMonths.group().reduceSum(function (d) {
-                return Math.abs(d.close - d.open);
+                return Math.abs(d.instantMPG - d.open);
             });
 
             var driveIDs = ndx.dimension(function(d){
@@ -182,13 +189,13 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             var indexAvgByMonthGroup = moveMonths.group().reduce(
                 function (p, v) {
                     ++p.days;
-                    p.total += (v.open + v.close) / 2;
+                    p.total += (v.open + v.instantMPG) / 2;
                     p.avg = Math.round(p.total / p.days);
                     return p;
                 },
                 function (p, v) {
                     --p.days;
-                    p.total -= (v.open + v.close) / 2;
+                    p.total -= (v.open + v.instantMPG) / 2;
                     p.avg = p.days ? Math.round(p.total / p.days) : 0;
                     return p;
                 },
@@ -206,7 +213,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             // determine a histogram of percent changes
             var fluctuation = ndx.dimension(function (d) {
-                return Math.round((d.close - d.open) / d.open * 100);
+                return Math.round((d.instantMPG - d.open) / d.open * 100);
             });
             var fluctuationGroup = fluctuation.group();
 
@@ -264,7 +271,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             yearlyBubbleChart
                 .width(450) // (optional) define chart width, :default = 200
-                .height(310)  // (optional) define chart height, :default = 200
+                .height(320)  // (optional) define chart height, :default = 200
                 .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
                 .margins({top: 10, right: 80, bottom: 50, left: 40})
                 .dimension(yearlyDimension)
@@ -339,7 +346,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                         var r, svg, g;
                         svg = d3.select(document.createElement("svg")).attr("height", 40).attr("width", 75);
                         g = svg.append("g");
-                        g.append("rect").attr("width", d.value.changeDist * 5).attr("height", 10);
+                        //g.append("rect").attr("width", d.value.changeDist * 5).attr("height", 10);
                         g.append("text").text("Drive Distance: " + String(d.value.changeDist)).attr("dy", "25");
                         g.append("text").text("Alt. Deviation :" + String(d.value.altavg.deviation)).attr("dy","50");
                         return {
@@ -401,7 +408,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             //#### Row Chart
             vehicleChart.width(180)
-                .height(200)
+                .height(300)
                 .margins({top: 0, left: 10, right: 40, bottom: 80})
                 .group(vehicleGroup)
                 .dimension(vehicles)
@@ -598,16 +605,19 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 <!-- data rows will filled in here -->
             </div>
             */
-            dc.dataTable(".dc-data-table")
+            dc.dataTable(".dc-data-table", profileGroup)
                 .dimension(yearlyPerformanceGroup)
                 // data table does not use crossfilter group but rather a closure
                 // as a grouping function
-                .group(function (d) {
-                    return d.driveID;
+                .group( function(d){
+                    return d.value.driver;
                 })
                 .size(10) // (optional) max number of records to be shown, :default = 25
                 // dynamic columns creation using an array of closures
                 .columns([
+                    function(d){
+                        return d.value.driver;
+                    },
                     function (d) {
                         return d.value.driveID;
                     },
@@ -629,15 +639,129 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                     return d.dd;
                 })
                 // (optional) sort order, :default ascending
-                .order(d3.ascending);
+                .order(d3.ascending)
                 // (optional) custom renderlet to post-process chart using D3
-                //.renderlet(function (table) {
-                //    table.selectAll(".dc-table-group").classed("info", true);
-                //});
+                .renderlet(function (table) {
+                    table.selectAll(".dc-table-group").classed("hidden", true);
+                });
+
+            mpgcharts.drivesArray = seriesData(data, ['altitude','instantMPG']);
+            mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1];
+
+
+
+
+            function defaultChartConfig(containerid, inputData, guideline, useDates, auxOptions) {
+              if (auxOptions === undefined) auxOptions = {};
+              if (guideline === undefined) guideline = true;
+
+              nv.addGraph(function() {
+
+
+
+
+                mpgcharts.seriesChart
+                    .x(function(d,i) {
+                    return d.x;
+                    });
+
+                if (auxOptions.width)
+                  seriesChart.width(auxOptions.width);
+
+                if (auxOptions.height)
+                  seriesChart.height(auxOptions.height);
+
+                if (auxOptions.forceY)
+                  seriesChart.forceY([0]);
+
+                //var formatter;
+/*                if (useDates !== undefined) {
+                    formatter = function(d,i) {
+                            //var now = (new Date()).getTime() - 86400 * 1000 * 365;
+                            //now = new Date(now + d * 86400 * 1000);
+                            //return d3.time.format('%b %d %Y')(now);
+                            return d3.time.format('%b %e %H:%M:%S %Y')(new Date(d));
+                        }
+                    }
+                else {
+                    formatter = d3.format(",.1f");
+                }*/
+/*                    var dateArray = [];
+                    for (var k=0; k<inputData.length - 1; k++){
+                        var thisExtent = d3.extent(inputData[k].values.map(function(d){return d.x;}));
+                        dateArray.push(thisExtent[0]);
+                        dateArray.push(thisExtent[1]);
+                    }
+                    var theDomain = d3.time.scale().domain(d3.extent(dateArray));
+                    mpgcharts.seriesChart.xAxis = d3.time.scale().domain(d3.extent(theDomain));
+                    mpgcharts.seriesChart.x2Axis = d3.time.scale().domain(d3.extent(theDomain));*/
+                mpgcharts.seriesChart.xAxis
+                    .tickFormat(d3.format(',.2f'));
+
+                mpgcharts.seriesChart.x2Axis
+                    .tickFormat(d3.format(',.2f'));
+
+                mpgcharts.seriesChart.yAxis
+                    .axisLabel('Value')
+                    .tickFormat(d3.format(',.2f'));
+
+                 // chart sub-models (ie. xAxis, yAxis, etc) when accessed directly, return themselves, not the parent chart, so need to chain separately
+
+                mpgcharts.seriesChart
+                    .y2Axis.axisLabel('Value')
+                    .tickFormat(d3.format(',.2f'));
+                //mpgcharts.seriesChart.forceX(d3.extent(theDomain));
+
+                d3.select('#' + containerid + ' svg')
+                    .datum(inputData)
+                  .transition().duration(1000)
+                    .call(mpgcharts.seriesChart);
+
+                nv.utils.windowResize(mpgcharts.seriesChart.update);
+                return mpgcharts.seriesChart;
+              });
+            }
+
+            // This function collects the grouped driveID data into the format needed to plot in a line graph
+            function seriesData(data, thekeys){
+                var drivesArray = [];
+                var allDrivesArray = [];
+                var b = yearlyPerformanceGroup.all();
+                var keys = thekeys;
+                var time = "GPS Time";
+
+                for (var k=0; k < b.length; k++){
+                    var filtered = data.filter(function(d){return d.driveID == b[k].key;});
+                    var a = [];
+                    for (var j=0; j < keys.length; j++){
+                        var d = {key: keys[j], driveID: b[k].key, values: []};
+                        for (var i=0; i < filtered.length; i = i+5){
+                            //Time d.values.push({x: new Date(filtered[i].dd.toISOString()), y: Number(filtered[i][keys[j]])});
+                            //Latitude d.values.push({x: Number(filtered[i].lat), y: Number(filtered[i][keys[j]])});
+                            d.values.push({x: i, y: Number(filtered[i][keys[j]])});
+                        }
+                        a.push(d);
+                        var temp = d;
+                        allDrivesArray.push(temp);
+                    }
+                    drivesArray.push(a);
+                }
+                drivesArray.push(allDrivesArray);
+                return drivesArray;
+            }
+
+
+            defaultChartConfig('nvSeriesChart'
+                , mpgcharts.seriesDatum
+                , true
+                , true
+                , {forceY:false, width:850, height:350, margin:{top: 50, right: 20, bottom: 50, left: 50}});
 
             //#### Rendering
             //simply call renderAll() to render all charts on the page
             dc.renderAll(profileGroup);
+
+
             /*
             // or you can render charts belong to a specific chart group
             dc.renderAll("group");
@@ -647,7 +771,52 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             // or you can choose to redraw only those charts associated with a specific chart group
             dc.redrawAll("group");
             */
+
+
+
+
+            yearlyBubbleChart.on("filtered", function(chart, filter){
+               var j;
+               var theFilter = filter;
+
+               //var filteredData = ndx.groupAll();
+               //var theGroup = yearlyPerformanceGroup.all();
+               //var newFilter = yearlyPerformanceGroup.all();
+               //var filteredData = yearlyDimension.filterAll([filter]);
+
+               if (filter == null){
+
+                   for (var i = 0; i < mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1].length; i++){
+
+                       for(var k in mpgcharts.drivesArray[i]){
+                           var str = "";
+                           var strArr = mpgcharts.drivesArray[i][k].driveID.split(" ");
+                           str = mpgcharts.drivesArray[i][k].key;
+                           if (str.indexOf(strArr[0]) === -1){
+                            mpgcharts.drivesArray[i][k].key = "" + strArr[0] + ":" + str;
+                           }
+                       }
+                   }
+                   mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1];
+                   mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
+               }
+               else{
+                   for (j in mpgcharts.drivesArray){
+                       if (filter == mpgcharts.drivesArray[j][0].driveID){
+                           mpgcharts.seriesDatum = mpgcharts.drivesArray[j];
+                           mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
+                       }
+                   }
+
+
+               }
+            });
+
+
+
         });
+
+
 
         mpgcharts.renderAll = function(a){
             dc.renderAll(a);
@@ -667,6 +836,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
 
 
+
         function getDistanceFromLatLonInKm(lat1,lon1,lat2,lon2) {
             var R = 6371; // Radius of the earth in km
             var dLat = deg2rad(lat2-lat1);  // deg2rad below
@@ -681,6 +851,45 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
         function deg2rad(deg) {
           return deg * (Math.PI/180)
+        }
+
+        mpgcharts.redrawSeries  = function(theData, chart){
+            mpgcharts.seriesDatum = theData;
+/*            for(var i in seriesDatum[0].values){
+                console.log(seriesDatum[0].values[i].x);
+                console.log(seriesDatum[0].values[i].y);
+            }
+            for(var j in seriesDatum[1].values){
+                console.log(seriesDatum[1].values[j].x);
+                console.log(seriesDatum[1].values[j].y);
+            }
+            var dateArray = [];
+            for (var k=0; k<seriesDatum.length - 1; k++){
+                var thisExtent = d3.extent(seriesDatum[k].values.map(function(d){return d.x;}));
+                dateArray.push(thisExtent[0]);
+                dateArray.push(thisExtent[1]);
+            }
+            var theDomain = d3.time.scale().domain(d3.extent(dateArray));
+            chart.xAxis = nv.models.axis().scale().domain(d3.extent(theDomain));
+            chart.x2Axis = nv.models.axis().scale().domain(d3.extent(theDomain));
+            chart
+                .x(function(d,i) {
+                      return d.x;
+                    });*/
+            //chart.forceX(d3.extent(theDomain));
+            //chart.xAxis = nv.models.axis().tickFormat(function(d){
+            //    return d3.time.format('%b %e %H:%M:%S %Y')(new Date(d));
+            //    });
+            //chart.x2Axis = nv.models.axis().tickFormat(function(d){
+            //    return d3.time.format('%b %e %H:%M:%S %Y')(new Date(d));
+            //    });
+            d3.select('#' + 'nvSeriesChart' + ' svg')
+                .empty();
+            d3.select('#' + 'nvSeriesChart' + ' svg')
+                .datum(mpgcharts.seriesDatum)
+              .transition().duration(1000)
+                .call(chart);
+            chart.update();
         }
 
         function average(a) {
@@ -703,8 +912,13 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
         mpgcharts.moveChart = moveChart;
         mpgcharts.volumeChart = volumeChart;
         mpgcharts.yearlyBubbleChart = yearlyBubbleChart;
-
         mpgcharts.loaded = true;
+        mpgcharts.seriesChart = seriesChart;
+        // Create the series chart the first time through
+
+        //Array.prototype.clone = function() {
+        //    return this.slice(0);
+        //};
 
         // Return the mpgcharts object, containing the customized dc.js charts
         return mpgcharts;

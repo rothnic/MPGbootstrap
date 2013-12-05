@@ -26,7 +26,8 @@ require.config({
         d3compat: "./libs/d3-compat",
         d3v2: "./libs/d3.v2.min",
         stats: "./libs/stats",
-        nv: "./libs/nv.d3"
+        nv: "./libs/nv.d3",
+        bootstrap: "../../dist/js/bootstrap.min.js"
     },
     shim:{
 
@@ -62,6 +63,7 @@ require.config({
             deps: ['d3'],
             exports: 'nv'
         }
+
 
     }
 });
@@ -104,13 +106,14 @@ require(["jquery"], function($){
 });
 
 // Bind buttons to javascript
-require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery", "tooltip", "tabs", "dc"], function($, mpgsite, gmaps, mpgcharts){
+require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery", "tooltip", "tabs", "dc", "nv"], function($, mpgsite, gmaps, mpgcharts){
 
 
     $('#user-profile-button').bind('click', function(){
         var user = "Pat";
-        mpgsite.login(user);
         console.log("in user profile event");
+        mpgsite.login(user);
+
 
     });
 
@@ -125,12 +128,15 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"
         for(var i = 0, ltlglen = mpgcharts.fulldata.getNumberOfRows(); i < ltlglen; i++){
             bounds.extend (new gmaps.maps.LatLng(mpgcharts.fulldata.getValue(i,4), mpgcharts.fulldata.getValue(i,3)));
         }
-        gmaps.maps.event.trigger(gmaps.map,'resize');
-        gmaps.map.fitBounds(bounds);
+
+        //mpgcharts.redrawSeries();
         mpgcharts.filterAll("profileGroup");
         mpgcharts.redrawAll("profileGroup");
         dc.filterAll();
         dc.renderAll();
+        gmaps.maps.event.trigger(gmaps.map,'resize');
+        gmaps.map.fitBounds(bounds);
+
 
         console.log("in map event");
         //e.target // activated tab
@@ -140,6 +146,7 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"
     $('a[data-toggle="tab"]').on('show.bs.tab', function (e) {
         //mpgcharts.redrawAll("profileGroup");
         console.log("in data redraw event");
+
     });
 
     $("#line-chart-button").bind('click', function(){

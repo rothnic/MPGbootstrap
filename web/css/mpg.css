@@ -81,3 +81,7 @@ div.panel.panel-default{
 #mapcol {
     padding-right: 1px;
 }
+
+#nvSeriesChart svg {
+  height: 400px;
+}

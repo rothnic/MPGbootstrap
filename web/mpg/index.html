@@ -94,34 +94,33 @@
                   <div id="map_canvas_profile"></div>
               </div>
             </div>
-          <div class="col-md-5 pull-left">
+          <div class="col-md-5">
               <div class="panel panel-default">
                   <div class="panel-heading small">Drives
                     <button id="drives-chart-button" type="button" class="btn btn-default btn-xs reset pull-right">reset</button>
-                  </div>
-                  <div class="panel-body">
-                      <div id="yearly-bubble-chart" class="dc-chart">
                       <div class="clearfix"></div>
                   </div>
+                  <div class="panel-body clearfix">
+                      <div id="yearly-bubble-chart" class="dc-chart"></div>
+                      <div class="clearfix"></div>
                 </div>
+
             </div>
           </div>
-          <div class="clearfix col-md-6"></div>
     </div>
 <div class="row">
     <div class="col-lg-10">
         <div class="panel panel-default">
             <div class="panel-heading small">Detailed Drive Statistics
                     <button id="line-chart-button" type="button" class="btn btn-default btn-xs reset pull-right"">reset</button>
-</div>
-        <div class="panel-body">
-            <div id="detailed-line-chart">
-                <div class="clearfix"></div>
+                    <div class="clearfix"></div>
             </div>
-            <div id="detailed-stats-chart">
-                <div class="clearfix"></div>
+            <div class="clearfix">
+                <div class="panel-body">
+                    <div class='chart full' id='nvSeriesChart'><svg preserverAspectRatio="xMinyMin"></svg>
+                    </div>
+                </div>
             </div>
-        </div>
         </div>
     </div>
     <div class="col-lg-2">
@@ -131,12 +130,12 @@
             </div>
                 <div class="panel-body">
                 <div id="vehicle-chart">
-
                 </div>
             </div>
         </div>
     </div>
     <div class="clearfix"></div>
+
 </div>
 
 <div class="row" id="myprofile_table">
@@ -146,10 +145,12 @@
                     <span class="filter-count" ></span> selected out of <span class="total-count"></span> records | <a
                         href="javascript:dc.filterAll(); dc.renderAll();" >Reset All</a>
                 </div>
+                <div class="clearfix"></div>
     </div>
             <table class="table table-hover dc-data-table">
                 <thead>
                 <tr class="header small">
+                    <th>Driver</th>
                     <th>Drive ID</th>
                     <th>Alt. StdDev</th>
                     <th>Data Points</th>
@@ -160,6 +161,7 @@
             </table>
         </div>
 </div>
+
       </div>
 
       <div class="tab-pane fade in active" id="leaderboard">
@@ -193,7 +195,7 @@
       <div class="tab-pane fade" id="presentation"></div>
       <div class="tab-pane fade" id="systemmodel">
         <div class="jumbotron">
-            <iframe seamless src="../export.html"></iframe>
+            <!--<iframe seamless src="../export.html"></iframe>-->
         </div>
       </div>
       <div class="tab-pane fade" id="about"></div>
