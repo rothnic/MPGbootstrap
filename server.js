@@ -4,7 +4,7 @@
 
 var connect = require('connect'),
    http = require('http');
-var port = proc.env.PORT || 5000;
+var port = process.env.PORT || 5000;
 
 connect()
    .use(connect.static(__dirname))
