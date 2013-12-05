@@ -63,6 +63,7 @@
     "grunt-docco2": "~0.1.5",
     "grunt-gh-pages": "~0.8.0",
     "grunt-markdown": "https://github.com/willkan/grunt-markdown/tarball/master",
-    "connect": "2.11.2"
+    "connect": "2.11.2",
+    "requirejs": "2.1.9"
     }
 }
