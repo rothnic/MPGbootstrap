@@ -4,7 +4,11 @@
 
 var connect = require('connect'),
    http = require('http');
+var port = proc.env.PORT || 5000;
+
 connect()
    .use(connect.static(__dirname))
    .use(connect.directory(__dirname))
-   .listen(5000);
+   .listen(port, function(){
+        console.log("Listening on " + port);
+    });
