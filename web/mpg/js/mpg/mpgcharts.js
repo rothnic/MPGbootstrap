@@ -777,7 +777,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             var isNull = false;
             yearlyBubbleChart.on("filtered", function(chart, filter){
 
-               var theFilter = filter;
+
 
                //var filteredData = ndx.groupAll();
                //var theGroup = yearlyPerformanceGroup.all();
@@ -798,29 +798,48 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                            }
                        }
                    }
-                   mpgcharts.seriesDatum = mpgcharts.drivesArray[len];
+                   mpgcharts.seriesDatum = mpgcharts.drivesArray[len].slice(0);
                    mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                }
-               else{
+               if (filter != null){
+
+
                    if (isNull == true){
                        isNull = false;
                        mpgcharts.seriesDatum.length = 0;
                    }
 
                    for (var j = 0; j < len; j++){
+                       var exists = false;
                        if (filter == mpgcharts.drivesArray[j][0].driveID){
-                           var newObj = {};
-                           var newObj2 = {};
-                           jQuery.extend(newObj, mpgcharts.drivesArray[j][0]);
-                           jQuery.extend(newObj2, mpgcharts.drivesArray[j][1]);
-                           mpgcharts.seriesDatum.push(newObj);
-                           mpgcharts.seriesDatum.push(newObj2);
-                           mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
+
+                           for(var k = 0; k < mpgcharts.seriesDatum.length - 1; k++){
+                               if (filter == mpgcharts.seriesDatum[k].driveID){
+                                   mpgcharts.seriesDatum.splice(k, 2);
+                                   exists = true;
+                               }
+                           }
+                            if (exists == false){
+                               var newObj = {};
+                               var newObj2 = {};
+                               jQuery.extend(newObj, mpgcharts.drivesArray[j][0]);
+                               jQuery.extend(newObj2, mpgcharts.drivesArray[j][1]);
+                               mpgcharts.seriesDatum.push(newObj);
+                               mpgcharts.seriesDatum.push(newObj2);
+                            }
+
+
                        }
                    }
-
-
+                      if(mpgcharts.seriesDatum.length == 0){
+                            mpgcharts.seriesDatum = [];
+                            mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1].slice(0);
+                            mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
+                        }
+                        mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                }
+
+
             });
 
 
