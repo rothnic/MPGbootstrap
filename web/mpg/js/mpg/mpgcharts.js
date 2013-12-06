@@ -774,9 +774,9 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
 
 
-
+            var isNull = false;
             yearlyBubbleChart.on("filtered", function(chart, filter){
-               var j;
+
                var theFilter = filter;
 
                //var filteredData = ndx.groupAll();
@@ -785,7 +785,8 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                //var filteredData = yearlyDimension.filterAll([filter]);
                var len = mpgcharts.drivesArray.length - 1;
                if (filter == null){
-
+                   isNull = true;
+                   mpgcharts.seriesDatum = [];
                    for (var i = 0; i <= len; i++){
                         var thisArray = mpgcharts.drivesArray[i];
                        for(var k = 0; k < thisArray.length - 1; k++){
@@ -801,9 +802,19 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                    mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                }
                else{
+                   if (isNull == true){
+                       isNull = false;
+                       mpgcharts.seriesDatum.length = 0;
+                   }
+
                    for (var j = 0; j < len; j++){
                        if (filter == mpgcharts.drivesArray[j][0].driveID){
-                           mpgcharts.seriesDatum = mpgcharts.drivesArray[j];
+                           var newObj = {};
+                           var newObj2 = {};
+                           jQuery.extend(newObj, mpgcharts.drivesArray[j][0]);
+                           jQuery.extend(newObj2, mpgcharts.drivesArray[j][1]);
+                           mpgcharts.seriesDatum.push(newObj);
+                           mpgcharts.seriesDatum.push(newObj2);
                            mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                        }
                    }
