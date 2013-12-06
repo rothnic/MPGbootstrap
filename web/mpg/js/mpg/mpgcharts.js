@@ -23,6 +23,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
         var yearlyBubbleChart = dc.bubbleChart("#yearly-bubble-chart",profileGroup);
         var seriesChart = nv.models.lineWithFocusChart().useInteractiveGuideline(true);
         mpgcharts.seriesDatum = [];
+        var currentIndex = 0;
         // ### Anchor Div for Charts
         /*
         // A div anchor that can be identified by id
@@ -65,11 +66,11 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 d.month = d3.time.month(d.dd); // pre-calculate month for better performance
                 d.instantMPG = +d["Miles Per Gallon(Instant)(mpg)"]; // coerce to number
                 d.open = +d["GPS Speed (Meters/second)"];
-                d.lat = +d[" Latitude"];
-                d.long = +d[" Longitude"];
+                d.lat = +d["Latitude"];
+                d.long = +d["Longitude"];
                 d.driveID = String(d["DriveID"]);
                 d.driver = d["Driver"]
-                d.altitude = +d[" Altitude"];
+                d.altitude = +d["Altitude"];
 
             });
 
@@ -108,10 +109,10 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 /* callback for when data is added to the current filter results */
                 function (p, v) {
                     ++p.count;
-                    p.altitude = Number(v[' Altitude']);
+                    p.altitude = Number(v['Altitude']);
                     p.driveID = String(v.driveID);
                     p.driver = v.driver;
-                    p.altarray.push(Number(v[' Altitude']));
+                    p.altarray.push(Number(v['Altitude']));
                     p.altavg = average(p.altarray);
                     p.thisLat = v.lat;
                     p.thisLong = v.long;
@@ -133,7 +134,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 function (p, v) {
                     --p.count;
                     p.driveID = String(v.driveID);
-                    p.altitude = Number(v[' Altitude']);
+                    p.altitude = Number(v['Altitude']);
                     var index = p.altarray.indexOf(p.altitude);
                     p.altarray.splice(index,1);
                     p.altavg = average(p.altarray);
@@ -645,6 +646,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                     table.selectAll(".dc-table-group").classed("hidden", true);
                 });
 
+
             mpgcharts.drivesArray = seriesData(data, ['altitude','instantMPG']);
             mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1];
 
@@ -781,12 +783,12 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                //var theGroup = yearlyPerformanceGroup.all();
                //var newFilter = yearlyPerformanceGroup.all();
                //var filteredData = yearlyDimension.filterAll([filter]);
-
+               var len = mpgcharts.drivesArray.length - 1;
                if (filter == null){
 
-                   for (var i = 0; i < mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1].length; i++){
-
-                       for(var k in mpgcharts.drivesArray[i]){
+                   for (var i = 0; i <= len; i++){
+                        var thisArray = mpgcharts.drivesArray[i];
+                       for(var k = 0; k < thisArray.length - 1; k++){
                            var str = "";
                            var strArr = mpgcharts.drivesArray[i][k].driveID.split(" ");
                            str = mpgcharts.drivesArray[i][k].key;
@@ -795,11 +797,11 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                            }
                        }
                    }
-                   mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1];
+                   mpgcharts.seriesDatum = mpgcharts.drivesArray[len];
                    mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                }
                else{
-                   for (j in mpgcharts.drivesArray){
+                   for (var j = 0; j < len; j++){
                        if (filter == mpgcharts.drivesArray[j][0].driveID){
                            mpgcharts.seriesDatum = mpgcharts.drivesArray[j];
                            mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);

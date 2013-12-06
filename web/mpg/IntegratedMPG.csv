@@ -1,4 +1,4 @@
-DriveID,Driver,Vehicle,GPS Time, Device Time, Longitude, Latitude,GPS Speed (Meters/second), Horizontal Dilution of Precision, Altitude, Bearing, G(x), G(y), G(z), G(calibrated),Miles Per Gallon(Instant)(mpg),Mass Air Flow Rate(cfm),Accel Pedal Pos #1(%)
+DriveID,Driver,Vehicle,GPS Time,Device Time,Longitude,Latitude,GPS Speed (Meters/second),Horizontal Dilution of Precision,Altitude,Bearing,G(x),G(y),G(z),G(calibrated),Miles Per Gallon(Instant)(mpg),Mass Air Flow Rate(cfm),Accel Pedal Pos #1(%)
 Tim - Mon Nov 18 07:26:54 CST 2013,Tim,Prius,Mon Nov 18 07:26:54 CST 2013,26:54.3,-86.74279672,34.58731802,0.5,3,175.1000061,0,-0.15567628,8.16462135,5.95521593,0.07170376,0,66.73796844,15.68627453
 Tim - Mon Nov 18 07:26:54 CST 2013,Tim,Prius,Mon Nov 18 07:26:56 CST 2013,26:55.3,-86.7427969,34.58731795,0.5,3,175.1000061,0,-0.23830444,8.34544563,6.07017708,0.07122427,0,67.54010773,15.68627453
 Tim - Mon Nov 18 07:26:54 CST 2013,Tim,Prius,Mon Nov 18 07:26:57 CST 2013,26:56.3,-86.742797,34.58731785,0.5,3,175,0,-0.44786865,8.44244385,6.00551128,0.0746372,0,66.01603699,15.68627453
