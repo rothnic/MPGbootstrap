@@ -67,14 +67,8 @@ div.panel .panel-body {
     margin-top: 0px;
 }
 
-div.panel.panel-default{
-    margin-bottom: 5px;
-    height: auto;
-}
-
 #map-well {
     height: auto;
-    margin-bottom: 5px;
     padding: 8px;
 }
 

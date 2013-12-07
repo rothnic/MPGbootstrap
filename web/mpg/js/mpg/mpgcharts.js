@@ -272,9 +272,9 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             yearlyBubbleChart
                 .width(450) // (optional) define chart width, :default = 200
-                .height(316)  // (optional) define chart height, :default = 200
+                .height(285)  // (optional) define chart height, :default = 200
                 .transitionDuration(1500) // (optional) define chart transition duration, :default = 750
-                .margins({top: 10, right: 80, bottom: 50, left: 40})
+                .margins({top: 10, right: 40, bottom: 30, left: 40})
                 .dimension(yearlyDimension)
                 //Bubble chart expect the groups are reduced to multiple values which would then be used
                 //to generate x, y, and radius for each key (bubble) in the group
@@ -409,7 +409,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             //#### Row Chart
             vehicleChart.width(180)
-                .height(300)
+                .height(180)
                 .margins({top: 0, left: 10, right: 40, bottom: 80})
                 .group(vehicleGroup)
                 .dimension(vehicles)
@@ -755,7 +755,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 , mpgcharts.seriesDatum
                 , true
                 , true
-                , {forceY:false, width:850, height:350, margin:{top: 50, right: 20, bottom: 50, left: 50}});
+                , {forceY:false, width:900, height:350, margin:{top: 50, right: 20, bottom: 30, left: 20}});
 
             //#### Rendering
             //simply call renderAll() to render all charts on the page
@@ -773,12 +773,9 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
             */
 
 
-
+            // Event handler to catch any bubble click on the yearlyBubbleChart
             var isNull = false;
             yearlyBubbleChart.on("filtered", function(chart, filter){
-
-
-
                //var filteredData = ndx.groupAll();
                //var theGroup = yearlyPerformanceGroup.all();
                //var newFilter = yearlyPerformanceGroup.all();
@@ -798,15 +795,14 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                            }
                        }
                    }
-                   mpgcharts.seriesDatum = mpgcharts.drivesArray[len].slice(0);
+                   mpgcharts.seriesDatum = mpgcharts.drivesArray[len].slice(0); //Copy full array into the chart data
                    mpgcharts.redrawSeries(mpgcharts.seriesDatum, mpgcharts.seriesChart);
                }
-               if (filter != null){
+               if (filter != null){ //If event generates a filter by driveID
 
-
-                   if (isNull == true){
+                   if (isNull == true){ //This means
                        isNull = false;
-                       mpgcharts.seriesDatum.length = 0;
+                       mpgcharts.seriesDatum.length = 0; //Reset the array to default view
                    }
 
                    for (var j = 0; j < len; j++){
@@ -817,6 +813,9 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                                if (filter == mpgcharts.seriesDatum[k].driveID){
                                    mpgcharts.seriesDatum.splice(k, 2);
                                    exists = true;
+                               }
+                               if (mpgcharts.seriesDatum.length === 0){
+                                   isNull = true;
                                }
                            }
                             if (exists == false){

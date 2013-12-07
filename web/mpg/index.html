@@ -58,7 +58,7 @@
               <li><a href="#systemmodel" data-toggle="tab">System Model</a></li>
               <li><a href="#about" data-toggle="tab">About</a></li>
             </ul>
-            <div class="col-sm-push-4">
+            <div class="col-lg-push-4">
                 <button type="button" class="btn btn-default btn-md" role="submit" id="user-profile-button">
                     <span class="glyphicon glyphicon-user text-center" id="usericon"></span>
                 </button>
@@ -72,13 +72,13 @@
 
         <div class="page-header">
             <div class="row hidden" id="my-bullet-row">
-                <div class="col-md-2"></div>
-                <div class="col-sm-4">
+                <div class="col-lg-2"></div>
+                <div class="col-lg-4">
                     <div class="panel panel-default">
                         <div class="gallery with-transitions" id="my-mpg-bullet"></div>
                     </div>
                 </div>
-                <div class="col-sm-4">
+                <div class="col-lg-4">
                     <div class="panel panel-default">
                         <div class="gallery with-transitions" id="my-money-bullet"></div>
                     </div>
@@ -89,18 +89,18 @@
     <div class ="tab-content">
       <div class="tab-pane fade in hidden" id="myprofile">
       <div class="row">
-              <div class="col-md-7" id="mapcol">
+              <div class="col-lg-7" id="mapcol">
               <div class="well" id="map-well">
                   <div id="map_canvas_profile"></div>
               </div>
             </div>
-          <div class="col-md-5">
+          <div class="col-lg-5">
               <div class="panel panel-default">
                   <div class="panel-heading small">Drives
                     <button id="drives-chart-button" type="button" class="btn btn-default btn-xs reset pull-right">reset</button>
                       <div class="clearfix"></div>
                   </div>
-                  <div class="panel-body clearfix">
+                  <div class="panel-body" id="drivespanel">
                       <div id="yearly-bubble-chart" class="dc-chart"></div>
                       <div class="clearfix"></div>
                 </div>
@@ -126,7 +126,7 @@
     <div class="col-lg-2">
         <div class="panel panel-default">
             <div class="panel-heading small">Vehicles
-                <button id="vehicle-chart-button" type="button" class="btn btn-default btn-xs reset pull-right">reset</button>
+                <button id="vehicle-chart-button" type="button" class="btn btn-default btn-xs reset clearfix pull-right">reset</button>
             </div>
                 <div class="panel-body">
                 <div id="vehicle-chart">
