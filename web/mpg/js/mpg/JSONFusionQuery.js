@@ -4,7 +4,7 @@
 define(["jquery"], 
 function($) {
     var jsonFusionQuery = {};
-    var query = "SELECT Driver, InstantMPG as MPG, Vehicle, Longitude, Latitude, 'GPS Time', 'Accel Pedal Pos #1(%)', DriveID, 'GPS Speed (Meters/second)' as speed, Altitude, 'Mass Air Flow Rate(cfm)' as MAF FROM 1H4jwm3yASY57Wkv9ksjNi4qNfARlQvs04tdDw1I";
+    var query = "SELECT Driver, InstantMPG as MPG, 'Engine Load(absolute)(%)' as engLoad, 'Trip Distance(miles)' as tripDist, 'Cost per mile(trip)' as costPerMile, 'Ambient Temp(F)' as ambTemp, 'Engine RPM(rpm)' as rpm, 'Trip average MPG(mpg)' as avgMPG, 'WindDirection(deg)' as windDir, 'WindSpeed(mph)' as windSpeed, Vehicle as vehicle, Longitude as long, Latitude as lat, 'GPS Time' as gpsTime, 'Accel Pedal Pos #1(%)' as accel, DriveID as driveID, 'GPS Speed (Meters/second)' as speed, Altitude as altitude, 'Mass Air Flow Rate(cfm)' as maf FROM 1DS6bR16zDH7MW56-YdsFlvArEct9BciS0yHdBt8";
     var queryText = encodeURIComponent(query);
 
     // Construct the URL
