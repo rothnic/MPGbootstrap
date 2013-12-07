@@ -54,7 +54,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
         //d3.json("data.json", function(data) {...};
         //jQuery.getJson("data.json", function(data){...});
         //```
-        d3.csv("../mpg/IntegratedMPG.csv", function (data) {
+        d3.csv("../mpg/MPGDataformatFinal.csv", function (data) {
             /* since its a csv file we need to format the data a bit */
             var dateFormat = d3.time.format("%Y-%m-%dT%H:%M:%S.%LZ");
             var shortDate = d3.time.format("%Y-%m-%d")
@@ -71,6 +71,12 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 d.driveID = String(d["DriveID"]);
                 d.driver = d["Driver"]
                 d.altitude = +d["Altitude"];
+                d.avgMPG = +d["Trip average MPG(mpg)"];
+                d.ambTemp = +d["Ambient Temp(F)"];
+                d.rpm = +d["Engine RPM(rpm)"];
+                d.dist = +d["Trip Distance(miles)"];
+
+
 
             });
 
@@ -127,7 +133,12 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                         p.changeDist += (getDistanceFromLatLonInKm(p.lastLat,p.lastLong,p.thisLat,p.thisLong) * 0.62);
                     }
                     storeLatLng(p.thisLat, p.thisLong);
-                    p.avgMPG = v['Miles Per Gallon(Instant)(mpg)'] / p.count;
+                    p.avgMPG = v.avgMPG;
+                    p.sumTemp += v.ambTemp;
+                    p.avgTemp = p.sumTemp/ p.count;
+                    if (v.dist != 0){
+                        p.dist = v.dist;
+                    }
                     return p;
                 },
                 /* callback for when data is removed from the current filter results */
@@ -152,13 +163,16 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                         p.changeDist -= (getDistanceFromLatLonInKm(p.lastLat,p.lastLong,p.thisLat,p.thisLong) * 0.62);
                     }
                     storeLatLng(p.thisLat, p.thisLong);
-                    p.avgMPG = v['Miles Per Gallon(Instant)(mpg)'] / p.count;
+                    p.avgMPG = v.avgMPG;
+                    p.sumTemp -= v.ambTemp;
+                    p.avgTemp = p.sumTemp/ p.count;
+                    p.dist = v.dist;
                     return p;
                 },
                 /* initialize p */
                 function () {
                     storeLatLng(0.0, 0.0);
-                    return {count: 0, avgMPG: 0, changeDist: 0.0, altarray:[], altitude:0.0};
+                    return {count: 0, avgMPG: 0.0, changeDist: 0.0, altarray:[], altitude:0.0, avgTemp:0.0, sumTemp:0.0, dist:0.0};
                 }
             );
 
@@ -185,7 +199,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
             // group by total volume within move, and scale down result
             var volumeByMonthGroup = moveMonths.group().reduceSum(function (d) {
-                return d.volume / 500000;
+                return d.altitude / 500000;
             });
             var indexAvgByMonthGroup = moveMonths.group().reduce(
                 function (p, v) {
@@ -280,7 +294,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 //to generate x, y, and radius for each key (bubble) in the group
                 .group(yearlyPerformanceGroup)
                 .colors(colorbrewer.RdYlGn[9]) // (optional) define color function or array for bubbles
-                .colorDomain([50, 0]) //(optional) define color domain to match your data domain if you want to bind data or color
+                .colorDomain([80, 30]) //(optional) define color domain to match your data domain if you want to bind data or color
                 //##### Accessors
                 //Accessor functions are applied to each value returned by the grouping
                 //
@@ -289,7 +303,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 //* `.valueAccessor` Identifies the `Y` value that will be applied agains the `.y()` to identify pixel location
                 //* `.radiusValueAccessor` Identifies the value that will be applied agains the `.r()` determine radius size, by default this maps linearly to [0,100]
                 .colorAccessor(function (d) {
-                    return d.value.altavg.deviation;
+                    return d.value.avgTemp;
                 })
                 .keyAccessor(function (d) {
                     return d.value.dd;
@@ -298,16 +312,16 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                     return p.value.avgMPG;
                 })
                 .radiusValueAccessor(function (p) {
-                    return p.value.lastLat;
+                    return p.value.dist;
                 })
-                .maxBubbleRelativeSize(0.02)
+                .maxBubbleRelativeSize(.1)
                 .x(dateScale)
                 //##### Elastic Scaling
                 //`.elasticX` and `.elasticX` determine whether the chart should rescale each axis to fit data.
                 //The `.yAxisPadding` and `.xAxisPadding` add padding to data above and below their max values in the same unit domains as the Accessors.
                 .elasticY(true)
                 .elasticX(true)
-                .yAxisPadding(.1)
+                .yAxisPadding(1)
                 .xAxisPadding(2)
                 .renderHorizontalGridLines(true) // (optional) render horizontal grid lines, :default=false
                 .renderVerticalGridLines(true) // (optional) render vertical grid lines, :default=false
@@ -337,7 +351,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
                 //Set a custom tick format. Note `.yAxis()` returns an axis object, so any additional method chaining applies to the axis, not the chart.
                 yearlyBubbleChart.yAxis().tickFormat(function (v) {
-                    return v + "%";
+                    return v;
                 });
                 yearlyBubbleChart.renderlet(function(yearlyBubbleChart){
                     // mix of dc API and d3 manipulation
@@ -647,7 +661,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                 });
 
 
-            mpgcharts.drivesArray = seriesData(data, ['altitude','instantMPG']);
+            mpgcharts.drivesArray = seriesData(data, ['altitude','instantMPG','rpm']);
             mpgcharts.seriesDatum = mpgcharts.drivesArray[mpgcharts.drivesArray.length - 1];
 
 
@@ -811,7 +825,7 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
 
                            for(var k = 0; k < mpgcharts.seriesDatum.length - 1; k++){
                                if (filter == mpgcharts.seriesDatum[k].driveID){
-                                   mpgcharts.seriesDatum.splice(k, 2);
+                                   mpgcharts.seriesDatum.splice(k, 3);
                                    exists = true;
                                }
                                if (mpgcharts.seriesDatum.length === 0){
@@ -821,10 +835,13 @@ define(["dc","d3", "d3v2", "jquery","crossfilter","colorbrewer","d3Tooltip", "js
                             if (exists == false){
                                var newObj = {};
                                var newObj2 = {};
+                                var newObj3 = {};
                                jQuery.extend(newObj, mpgcharts.drivesArray[j][0]);
                                jQuery.extend(newObj2, mpgcharts.drivesArray[j][1]);
+                                jQuery.extend(newObj3, mpgcharts.drivesArray[j][2]);
                                mpgcharts.seriesDatum.push(newObj);
                                mpgcharts.seriesDatum.push(newObj2);
+                                mpgcharts.seriesDatum.push(newObj3);
                             }
 
 

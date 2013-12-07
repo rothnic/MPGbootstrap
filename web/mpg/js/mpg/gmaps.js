@@ -17,8 +17,8 @@ define(["async!https://maps.googleapis.com/maps/api/js?key=AIzaSyDG2IoHqOa36_u6C
                   map: gmaps.map,
                   heatmap: { enabled: false },
                   query: {
-                    select: "col6",
-                    from: "1H4jwm3yASY57Wkv9ksjNi4qNfARlQvs04tdDw1I",
+                    select: "col8",
+                    from: "1DS6bR16zDH7MW56-YdsFlvArEct9BciS0yHdBt8",
                     where: ""
                   },
                   options: {

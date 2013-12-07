@@ -81,7 +81,7 @@ require([ "jquery", "getdata", "jsonFusionQuery", "gmaps", "mpgcharts", "gomaps"
     jsonFusionQuery.getData().done(function(data){
         mpgcharts.fulldata = jsonFusionQuery.dataTable;
         var mapCanvas = $( "#map_canvas_profile" ).get( 0 );
-        var center = new gmaps.maps.LatLng(mpgcharts.fulldata.getValue(200,4), mpgcharts.fulldata.getValue(200,3));
+        var center = new gmaps.maps.LatLng(mpgcharts.fulldata.getValue(200,12), mpgcharts.fulldata.getValue(200,11));
         gmaps.createMap(mapCanvas, center);
         return data;
     });
@@ -110,7 +110,7 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"
 
 
     $('#user-profile-button').bind('click', function(){
-        var user = "Pat";
+        var user = "Nick";
         console.log("in user profile event");
         mpgsite.login(user);
 
@@ -126,7 +126,7 @@ require(["jquery", "mpgsite", "gmaps", "mpgcharts", "getdata", "jsonFusionQuery"
     $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
         var bounds = new gmaps.maps.LatLngBounds();
         for(var i = 0, ltlglen = mpgcharts.fulldata.getNumberOfRows(); i < ltlglen; i++){
-            bounds.extend (new gmaps.maps.LatLng(mpgcharts.fulldata.getValue(i,4), mpgcharts.fulldata.getValue(i,3)));
+            bounds.extend (new gmaps.maps.LatLng(mpgcharts.fulldata.getValue(i,12), mpgcharts.fulldata.getValue(i,11)));
         }
 
         //mpgcharts.redrawSeries();
